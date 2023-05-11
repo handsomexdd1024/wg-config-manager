@@ -32,3 +32,19 @@
 - TLS和身份验证所用的密码学库
 - WireGuard密钥生成
 - yaml库和toml库
+
+## Acknowledgement
+
+Copyright (c) 2023 Billy Yang, Jayson Luo, Kathrine Hu.
+
+本项目以GNU AGPLv3协议开源。
+
+本项目使用了以下开源项目的代码：
+
+- [Python3](https://www.python.org/) (PSFL License)
+- [wireguard-tools (Python implementation)](https://github.com/cmusatyalab/wireguard-tools) (MIT License)
+- [PyYAML](https://github.com/yaml/pyyaml) (MIT License)
+- [bcrypt](https://github.com/pyca/bcrypt) (Apache License 2.0)
+- [Psycopg](https://www.psycopg.org) (GNU LGPLv3)
+
+本小组成员在此对以上项目的开发者表示感谢。
