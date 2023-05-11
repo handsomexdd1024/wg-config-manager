@@ -25,6 +25,7 @@ class WireGuardNode(ABC):
 
     def __init__(
             self,
+            identifier: uuid.UUID,
             name: str,
             node_type: int,
             address_list: list[IPv4Address | IPv4Network | IPv6Address | IPv6Network]
@@ -36,7 +37,7 @@ class WireGuardNode(ABC):
         :param address_list: List of addresses of the node.
         """
         self.name = name
-        self.uuid = uuid.uuid4()
+        self.uuid = identifier
         self.node_type = node_type
         self.address_list = address_list
         self.private_key = WireguardKey.generate()
@@ -57,11 +58,23 @@ class WireGuardNetwork(ABC):
 
     def __init__(
             self,
+            identifier: uuid.UUID,
             name: str,
             node_list: list[WireGuardNode] = None,
             edge_list: list[tuple[WireGuardNode, WireGuardNode]] = None
     ):
         self.name = name
-        self.uuid = uuid.uuid4()
+        self.uuid = identifier
         self.node_list = node_list if node_list is not None else []
         self.edge_list = edge_list if edge_list is not None else []
+
+    def __str__(self):
+        """
+        Return a string representation of the network.
+        :return: String representation of the network.
+        """
+        return f"Network {self.name} with nodes {self.node_list} and edges {self.edge_list}."
+
+    def refresh_edges(self):
+        # TODO
+        pass
