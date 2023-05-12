@@ -5,7 +5,7 @@ Generate configuration files from given wireguard network object, and vice versa
 
 import yaml
 
-from core.wireguard_network import WireGuardNetwork, WireGuardNode
+from core.wireguard_network import *
 
 
 class ConfigParser:

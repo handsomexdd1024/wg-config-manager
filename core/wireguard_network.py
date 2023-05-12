@@ -10,12 +10,16 @@ from ipaddress import (
     IPv6Address,
     IPv6Network
 )
-
 import uuid
-
 from abc import ABC, abstractmethod
-
+from enum import Enum
 from wireguard_tools.wireguard_key import *
+
+
+class NodeType(Enum):
+    PEER = 0
+    ROUTER = 1
+    ROUTED = 2
 
 
 class WireGuardNode(ABC):
@@ -27,7 +31,7 @@ class WireGuardNode(ABC):
             self,
             identifier: uuid.UUID,
             name: str,
-            node_type: int,
+            node_type: NodeType,
             address_list: list[IPv4Address | IPv4Network | IPv6Address | IPv6Network]
     ):
         """
