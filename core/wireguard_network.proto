@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+enum WireguardNodeType {
+    WIREGUARD_NODE_TYPE_PEER = 0;
+    WIREGUARD_NODE_TYPE_ROUTER = 1;
+    WIREGUARD_NODE_TYPE_ROUTED = 2;
+}
+
+message WireguardNode {
+    string name = 1;
+    bytes uuid = 2;
+    WireguardNodeType type = 3;
+    repeated bytes addresses = 4;
+}
+
+message WireguardConnection {
+    repeated bytes uuids = 1;
+    bytes preshared_key = 2;
+}
+
+message WireguardConfig {
+    bytes uuid = 1;
+    string name = 2;
+    repeated WireguardNode nodes = 3;
+    repeated WireguardConnection connections = 4;
+}
