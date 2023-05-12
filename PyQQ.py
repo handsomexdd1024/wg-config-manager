@@ -21,7 +21,6 @@ class LoginWindow(QWidget):
         # 创建一个垂直布局
         self.v_layout = QVBoxLayout()
         # 设置窗口布局为水平布局
-
         # self.setLayout(self.h_layout)
 
     def initUI(self):
