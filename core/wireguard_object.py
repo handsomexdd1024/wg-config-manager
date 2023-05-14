@@ -33,8 +33,8 @@ class WireguardNode(ABC):
             name: str,
             address_list: list[IPv4Address | IPv4Network | IPv6Address | IPv6Network | None],
             node_type: NodeType = NodeType.PEER,
-            private_key: bytes = None,
-            public_key: bytes = None,
+            private_key: str = None,
+            public_key: str = None,
     ):
         """
         Initialize a WireGuard node.
@@ -67,7 +67,7 @@ class WireguardConnection(ABC):
             self,
             identifier: uuid.UUID,
             peers: (uuid.UUID, uuid.UUID),
-            preshared_key: bytes | None
+            preshared_key: str | None
     ):
         self.identifier = identifier
         self.peers = peers

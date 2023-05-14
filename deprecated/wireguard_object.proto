@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+package core;
+
 enum WireguardNodeType {
     WIREGUARD_NODE_TYPE_PEER = 0;
     WIREGUARD_NODE_TYPE_ROUTER = 1;
@@ -15,7 +17,7 @@ message WireguardNode {
 
 message WireguardConnection {
     repeated bytes uuids = 1;
-    bytes preshared_key = 2;
+    optional bytes preshared_key = 2;
 }
 
 message WireguardConfig {
