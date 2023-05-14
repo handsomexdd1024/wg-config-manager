@@ -1,4 +1,4 @@
 # import all the classes from the core package
-import wireguard_network
-import config_parser
-import user
+from wireguard_object import *
+from config_parser import *
+from user import *
