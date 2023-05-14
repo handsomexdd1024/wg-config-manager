@@ -13,6 +13,7 @@ from ipaddress import (
 import uuid
 from abc import ABC, abstractmethod
 from enum import Enum
+from json import loads, dumps
 from wireguard_tools.wireguard_key import *
 
 
@@ -57,6 +58,40 @@ class WireguardNode(ABC):
         """
         return f"Node {self.name} with UUID {self.uuid} and addresses {self.address_list}."
 
+    # convert to json
+    def to_json(self) -> str:
+        """
+        Convert a WireguardNode object to a JSON string.
+        :return: JSON string
+        """
+        return dumps({
+            "name": self.name,
+            "uuid": str(self.uuid),
+            "node_type": self.node_type,
+            "address_list": self.address_list,
+            "private_key": self.private_key,
+            "public_key": self.public_key
+        },
+            ensure_ascii=False
+        )
+
+    @classmethod
+    def from_json(cls, json_node: str):
+        """
+        Convert a JSON string to a WireguardNode object.
+        :param json_node: JSON string
+        :return: WireguardNode object
+        """
+        node = loads(json_node)
+        return WireguardNode(
+            name=node["name"],
+            identifier=node["uuid"],
+            node_type=node["node_type"],
+            address_list=node["address_list"],
+            private_key=node["private_key"],
+            public_key=node["public_key"]
+        )
+
 
 class WireguardConnection(ABC):
     """
@@ -72,6 +107,33 @@ class WireguardConnection(ABC):
         self.identifier = identifier
         self.peers = peers
         self.preshared_key = preshared_key
+
+    def to_json(self) -> str:
+        """
+        Convert a WireguardConnection object to a JSON string.
+        :return: JSON string
+        """
+        return dumps({
+            "uuid": str(self.identifier),
+            "peers": self.peers,
+            "preshared_key": self.preshared_key
+        },
+            ensure_ascii=False
+        )
+
+    @classmethod
+    def from_json(cls, json_connection: str):
+        """
+        Convert a JSON string to a WireguardConnection object.
+        :param json_connection: JSON string
+        :return: WireguardConnection object
+        """
+        connection = loads(json_connection)
+        return WireguardConnection(
+            identifier=connection["uuid"],
+            peers=connection["peers"],
+            preshared_key=connection["preshared_key"]
+        )
 
 
 class WireguardNetwork(ABC):
@@ -104,6 +166,35 @@ class WireguardNetwork(ABC):
         :return: String representation of the network.
         """
         return f"Network {self.name} with nodes {self.node_list} and edges {self.connection_list}."
+
+    def to_json(self) -> str:
+        """
+        Convert a WireguardNetwork object to a JSON string.
+        :return: JSON string
+        """
+        return dumps({
+            "name": self.name,
+            "uuid": str(self.uuid),
+            "node_list": [node.to_json() for node in self.node_list],
+            "connection_list": [connection.to_json() for connection in self.connection_list]
+        },
+            ensure_ascii=False
+        )
+
+    @classmethod
+    def from_json(cls, json_network: str):
+        """
+        Convert a JSON string to a WireguardNetwork object.
+        :param json_network: JSON string
+        :return: WireguardNetwork object
+        """
+        network = loads(json_network)
+        return WireguardNetwork(
+            name=network["name"],
+            identifier=network["uuid"],
+            node_list=[WireguardNode.from_json(node) for node in network["node_list"]],
+            connection_list=[WireguardConnection.from_json(connection) for connection in network["connection_list"]]
+        )
 
     def refresh_edges(self):
         # TODO

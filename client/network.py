@@ -7,8 +7,6 @@ import socket
 import ssl
 from abc import ABC, abstractmethod
 
-import core.wireguard_object_pb2 as wg_obj
-
 
 class ConfigServer(ABC):
     # TODO
