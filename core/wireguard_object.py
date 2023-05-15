@@ -28,6 +28,12 @@ class WireguardNode(ABC):
         ROUTER = 1
         ROUTED = 2
 
+    @classmethod
+    class EndpointType(Enum):
+        IPV4 = 0
+        IPV6 = 1
+        DOMAIN = 2
+
     def __init__(
             self,
             identifier: uuid.UUID,
@@ -36,6 +42,7 @@ class WireguardNode(ABC):
             node_type: NodeType = NodeType.PEER,
             private_key: str = None,
             public_key: str = None,
+            endpoint: (str, int) | None = None,
     ):
         """
         Initialize a WireGuard node.
@@ -50,13 +57,7 @@ class WireguardNode(ABC):
         self.address_list = address_list
         self.private_key = private_key
         self.public_key = public_key
-
-    def __str__(self):
-        """
-        Return a string representation of the node.
-        :return: String representation of the node.
-        """
-        return f"Node {self.name} with UUID {self.uuid} and addresses {self.address_list}."
+        self.endpoint = endpoint
 
     # convert to json
     def to_json(self) -> str:
@@ -70,7 +71,8 @@ class WireguardNode(ABC):
             "node_type": self.node_type,
             "address_list": self.address_list,
             "private_key": self.private_key,
-            "public_key": self.public_key
+            "public_key": self.public_key,
+            "endpoint": self.endpoint
         },
             ensure_ascii=False
         )
@@ -89,7 +91,8 @@ class WireguardNode(ABC):
             node_type=node["node_type"],
             address_list=node["address_list"],
             private_key=node["private_key"],
-            public_key=node["public_key"]
+            public_key=node["public_key"],
+            endpoint=node["endpoint"]
         )
 
 
