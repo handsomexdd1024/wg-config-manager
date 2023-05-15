@@ -10,4 +10,14 @@ from abc import ABC, abstractmethod
 
 class ConfigServer(ABC):
     # TODO
+
+    def __init__(
+            self,
+            server_address: str,
+            port: str
+    ):
+        self.server_address = server_address
+        self.port = port
+        self.socket = None
+        self.ssl_context = None
     pass
