@@ -1,1 +1,23 @@
 # 客户端业务逻辑-底层接口
+## Initiation
+- network-configserver
+  > 建立与服务器的连接,ip,port
+## UI
+### Login
+- core-login
+  > 包含发送usr_name,usr_pwd,usr_type到服务器
+- core-authenticate
+  > 请求server验证usr_name,usr_pwd,usr_type,并且用一个线程等待/接收response
+### CliWindow
+- network-get_all_node
+  > 请求server发送格式化的（json）消息，包含node信息
+  > node向json的格式化由服务器完成，先通过数据库（server-database）获取wg_object结点信息
+  > 再通过（core-wg_object_parser）解析
+- client-show_graph
+  > 将json格式的node信息用可视化网状图显示
+- client-show_node
+  > 在右侧click任意一个node，显示该node的详细信息（ip,public_key,etc）
+  > 以输入框的形式展现，通过判断是否admin，决定是否有权限在输入框直接修改
+  > - 通过（network-update_node）将修改后的信息发送到server
+- core-config_parser
+  > click生成配置文件
