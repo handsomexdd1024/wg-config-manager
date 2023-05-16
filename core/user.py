@@ -6,7 +6,7 @@ User module for WireGuard configuration management system.
 """
 
 from abc import ABC, abstractmethod
-import bcrypt as hash
+import bcrypt
 import uuid
 
 
@@ -28,4 +28,4 @@ class User(ABC):
         self.salt = salt
 
     def authenticate(self, plaintext: str) -> bool:
-        return hash.checkpw(plaintext.encode("bytes"), self.hashed_password)
+        return bcrypt.checkpw(plaintext.encode("bytes"), self.hashed_password)
