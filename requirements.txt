@@ -8,3 +8,5 @@ PyYAML==6.0
 segno==1.5.2
 typing_extensions==4.5.0
 wireguard-tools==0.4.1
+
+PyQt5~=5.15.9
