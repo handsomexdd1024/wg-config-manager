@@ -200,5 +200,15 @@ class WireguardNetwork(ABC):
         )
 
     def refresh_edges(self):
-        # TODO
-        pass
+        """
+        Reconstruct edges according to ip addresses and given routes.
+        """
+        pass  # todo
+
+    def gen_config(self, node_uuid: uuid.UUID):
+        """
+        Generate Wireguard config file for the given node.
+        :param node_uuid:
+        :return:
+        """
+        pass  # todo
