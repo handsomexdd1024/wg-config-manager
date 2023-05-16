@@ -1,7 +1,3 @@
-# 客户端核心-底层接口文档
+# 客户端核心-网络模块接口文档
 
-## Initialization
-
-- network-configserver
-
-  > 建立与服务器的连接,ip,port
+客户端的网络模块分为两层：给client-main提供的核心接口层和

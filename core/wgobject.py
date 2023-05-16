@@ -4,6 +4,8 @@
 This module contains class for basic nodes and network graphs of a WireGuard network.
 """
 
+__all__ = ["WireguardNode", "WireguardObject", "WireguardNetwork", "WireguardConnection"]
+
 from ipaddress import (
     IPv4Address,
     IPv4Network,
@@ -17,7 +19,34 @@ from json import loads, dumps
 from wireguard_tools.wireguard_key import *
 
 
-class WireguardNode(ABC):
+class WireguardObject(ABC):
+    """
+    This class represents an abstract Wireguard object (node, connection, network, etc.) with a unique uuid.
+    """
+
+    def __init__(self, identifier: uuid.UUID):
+        """
+        Initialize a WireguardObject.
+        :param identifier: UUID of the object.
+        """
+        self.uuid = identifier
+
+    def __eq__(self, other):
+        if isinstance(other, WireguardObject):
+            return self.uuid == other.uuid
+        else:
+            return False
+
+    @abstractmethod
+    def to_json(self) -> str:
+        """
+        Convert a WireguardObject object to a JSON string.
+        :return: JSON string
+        """
+        pass
+
+
+class WireguardNode(WireguardObject):
     """
     This class represents a WireGuard node.
     """
@@ -42,7 +71,7 @@ class WireguardNode(ABC):
             node_type: NodeType = NodeType.PEER,
             private_key: str = None,
             public_key: str = None,
-            endpoint: (str, int) | None = None,
+            endpoint: (str, int) = None,
     ):
         """
         Initialize a WireGuard node.
@@ -51,8 +80,8 @@ class WireguardNode(ABC):
         :param address_list: List of addresses of the node.
         :param node_type: Type of the node. Can be one of NodeType.PEER, NodeType.ROUTER, NodeType.ROUTED.
         """
+        super().__init__(identifier)
         self.name = name
-        self.uuid = identifier
         self.node_type = node_type
         self.address_list = address_list
         self.private_key = private_key
@@ -96,7 +125,7 @@ class WireguardNode(ABC):
         )
 
 
-class WireguardConnection(ABC):
+class WireguardConnection(WireguardObject):
     """
     This class represents connections between WireGuard nodes.
     """
@@ -107,7 +136,7 @@ class WireguardConnection(ABC):
             peers: (uuid.UUID, uuid.UUID),
             preshared_key: str | None
     ):
-        self.identifier = identifier
+        super().__init__(identifier)
         self.peers = peers
         self.preshared_key = preshared_key
 
@@ -117,7 +146,7 @@ class WireguardConnection(ABC):
         :return: JSON string
         """
         return dumps({
-            "uuid": str(self.identifier),
+            "uuid": str(self.uuid),
             "peers": self.peers,
             "preshared_key": self.preshared_key
         },
@@ -139,7 +168,7 @@ class WireguardConnection(ABC):
         )
 
 
-class WireguardNetwork(ABC):
+class WireguardNetwork(WireguardObject):
     """
     This class represents a WireGuard network.
     """
@@ -158,8 +187,8 @@ class WireguardNetwork(ABC):
         :param node_list: List of the network nodes.
         :param connection_list: List of connections between network nodes.
         """
+        super().__init__(identifier)
         self.name = name
-        self.uuid = identifier
         self.node_list = node_list if node_list is not None else []
         self.connection_list = connection_list if connection_list is not None else []
 
