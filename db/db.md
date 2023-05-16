@@ -56,7 +56,7 @@ NodeType_value = NodeType.value  # 获取枚举成员的整数值
 NodeType = NodeType(int_PEER)  # 将整数转换为枚举类型
 ```
 
-#### 二、list与string之间转换:
+#### 二、list与string之间转换：
 在Python中，可以使用以下方法将列表（list）与字符串（string）之间进行转换：
 
 - 1.将列表转换为字符串：

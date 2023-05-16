@@ -9,7 +9,6 @@ conn = psycopg2.connect(
     user="myuser",
     password="mypassword"
 )
-
 # 创建游标对象
 cur = conn.cursor()
 
