@@ -1,8 +1,8 @@
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
-from PyQt5.QtGui import QFont, QIcon, QPalette, QColor, QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton
+from PyQt5.QtGui import QFont, QIcon, QPalette, QColor, QPixmap, QMovie
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QSplitter
 from qt_material import apply_stylesheet
 
 # 创建应用程序对象
@@ -11,20 +11,22 @@ class LoginWindow(QWidget):
         super().__init__()
 
         # 创建一个水平布局
-        self.h_layout = QHBoxLayout()
-        self.setLayout(self.h_layout)
+        self.h_layout = QHBoxLayout(self)
+
+        # 创建一个分割窗口，左右各占一半
+        self.splitter = QSplitter(Qt.Horizontal, self)
+        self.h_layout.addWidget(self.splitter)
 
         # 创建左侧的背景图片
-        self.bg_pic = QLabel(self)
-        self.bg_pic.setPixmap(QPixmap('cloud.jpg').scaledToWidth(400))
-        # self.bg_pic.setStyleSheet('background-color: #FAFAFA')
-        self.h_layout.addWidget(self.bg_pic)
+        self.bg_pic = QLabel(self.splitter)
+        self.bg_pic.setScaledContents(True)
+        self.splitter.addWidget(self.bg_pic)
 
         # 创建右侧的登录表单
-        self.login_widget = QWidget(self)
+        self.login_widget = QWidget(self.splitter)
+        self.splitter.addWidget(self.login_widget)
         self.login_layout = QGridLayout(self.login_widget)
         self.login_widget.setStyleSheet('background-color: #3c3f41')
-        self.h_layout.addWidget(self.login_widget)
 
         # 创建登录表单中的控件
         self.label = QLabel('Central WireGuard Network Manager', self.login_widget)
@@ -49,11 +51,31 @@ class LoginWindow(QWidget):
         self.check_box = QCheckBox('管理员登陆', self.login_widget)
         self.login_layout.addWidget(self.check_box, 4, 0, 1, 2, Qt.AlignCenter)
 
+        # 底部的注册和忘记密码(使用另一种样式）
+        self.bottom_widget = QWidget(self.login_widget)
+        self.bottom_layout = QHBoxLayout(self.bottom_widget)
+        self.bottom_widget.setStyleSheet('background-color: #3c3f41')
+        self.login_layout.addWidget(self.bottom_widget, 5, 0, 1, 2, Qt.AlignCenter)
+
+        self.register_button = QPushButton('注册', self.bottom_widget)
+        self.register_button.setStyleSheet('border: none')
+        self.bottom_layout.addWidget(self.register_button, Qt.AlignLeft)
+
+        self.forget_button = QPushButton('忘记密码', self.bottom_widget)
+        self.forget_button.setStyleSheet('border: none')
+        self.bottom_layout.addWidget(self.forget_button, Qt.AlignRight)
+
+
         # 设置窗口属性
         self.setGeometry(300, 300, 800, 500)
         self.setWindowIcon(QIcon('vscode.jfif'))
         self.setWindowTitle('Fast WireGuard Network Manager')
         self.login_button.clicked.connect(self.login)
+
+        # 设置动态背景图片
+        movie = QMovie('tunnel.gif')
+        self.bg_pic.setMovie(movie)
+        movie.start()
 
     def login(self):
         username = self.user_edit.text()
@@ -63,6 +85,14 @@ class LoginWindow(QWidget):
 
         print('账号：', username)
         print('密码：', password)
+
+    def sign_up(self):
+        # TODO: 在此处编写注册账号的代码
+        print('注册账号')
+
+    def forget_password(self):
+        # TODO: 在此处编写忘记密码的代码
+        print('忘记密码')
 
 if __name__ == '__main__':
     extra = {
