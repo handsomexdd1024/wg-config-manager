@@ -9,5 +9,15 @@ from core.wireguard_object import *
 
 
 class ConfigParser:
-    # TODO
-    pass
+    """
+    Parse WireguardNetwork object into Wireguard configuration files.
+    """
+
+    def load_network(self, network: WireguardNetwork):
+        self.network = network
+
+    def __init__(self, network: WireguardNetwork):
+        self.network = network
+
+    def generate_config(self, node_id: uuid.UUID):
+        pass  # todo
