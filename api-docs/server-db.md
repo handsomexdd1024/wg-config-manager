@@ -1,12 +1,16 @@
 # 服务端业务逻辑-底层接口
 
-## 初始化部分
+## Initialization
 
-读取配置文件 - config部分，初始化为config类
+config-read_config
 
-根据配置文件建立server - connection部分，负责初始化网络服务
+> 从配置文件读取并处理配置信息
 
-## 处理请求
+connection-initialize_connection
+
+> 初始化信息
+
+## Network Request
 
 网络模块的几种不同思路：
 
