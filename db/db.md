@@ -38,12 +38,12 @@ list[IPv4Address | IPv4Network | IPv6Address | IPv6Network | None]
 # `二、user.database`
 ## 1.schema user_self:
 ### (1)table user_self
+
 - name（string） 
 - identifier(uuid与string类型的转换)
 - table self.hashed_password（bytes与string转换） 
 - table self.salt（bytes与string转换）
-
-
+- 
 #数据库与py之间的类型转换
 #### 一、Enum和int之间的转换
 - 1.将枚举类型转换为整数： 可以使用枚举成员的值（value）属性来获取枚举成员的整数值

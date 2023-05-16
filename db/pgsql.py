@@ -13,6 +13,7 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 #提交和回滚事务
+
 try:
     # 执行多个SQL操作
     cur.execute("INSERT INTO mytable (name) VALUES ('John')")
