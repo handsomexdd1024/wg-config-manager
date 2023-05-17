@@ -177,41 +177,27 @@ class WireguardNetwork(WireguardObject):
             self,
             identifier: uuid.UUID,
             name: str,
-            node_list: list[WireguardNode] = None,
-            connection_list: list[WireguardConnection] = None
+            node_uuid_list: list[uuid.UUID] = None,
+            connection_uuid_list: list[uuid.UUID] = None
     ):
         """
         Initialize a WireGuard network.
         :param identifier: UUID of the network.
         :param name: Name of the network.
-        :param node_list: List of the network nodes.
-        :param connection_list: List of connections between network nodes.
+        :param node_uuid_list: List of UUIDs of the nodes in the network.
+        :param connection_uuid_list: List of UUIDs of the connections in the network.
         """
         super().__init__(identifier)
         self.name = name
-        self.node_list = node_list if node_list is not None else []
-        self.connection_list = connection_list if connection_list is not None else []
-
-    def __str__(self):
-        """
-        Return a string representation of the network.
-        :return: String representation of the network.
-        """
-        return f"Network {self.name} with nodes {self.node_list} and edges {self.connection_list}."
+        self.node_uuid_list = node_uuid_list
+        self.connection_uuid_list = connection_uuid_list
 
     def to_json(self) -> str:
         """
         Convert a WireguardNetwork object to a JSON string.
         :return: JSON string
         """
-        return dumps({
-            "name": self.name,
-            "uuid": str(self.uuid),
-            "node_list": [node.to_json() for node in self.node_list],
-            "connection_list": [connection.to_json() for connection in self.connection_list]
-        },
-            ensure_ascii=False
-        )
+        pass  # todo: implement this method
 
     @classmethod
     def from_json(cls, json_network: str):
@@ -220,19 +206,13 @@ class WireguardNetwork(WireguardObject):
         :param json_network: JSON string
         :return: WireguardNetwork object
         """
-        network = loads(json_network)
-        return WireguardNetwork(
-            name=network["name"],
-            identifier=network["uuid"],
-            node_list=[WireguardNode.from_json(node) for node in network["node_list"]],
-            connection_list=[WireguardConnection.from_json(connection) for connection in network["connection_list"]]
-        )
+        pass  # todo: implement this method
 
     def refresh_edges(self):
         """
         Reconstruct edges according to ip addresses and given routes.
         """
-        pass  # todo
+        pass  # todo: implement this method
 
     def gen_config(self, node_uuid: uuid.UUID):
         """
@@ -240,4 +220,4 @@ class WireguardNetwork(WireguardObject):
         :param node_uuid:
         :return:
         """
-        pass  # todo
+        pass  # todo: decide if this method should be here or in standalone config generator
