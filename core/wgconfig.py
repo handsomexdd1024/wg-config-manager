@@ -7,12 +7,14 @@ Wireguard network configuration file, including:
 - WireguardNetwork uuid
 """
 
+__all__ = ["WireguardConfig", "config_generator"]
+
 from abc import ABC, abstractmethod
 from uuid import UUID
 from core.wgobject import *
 
 
-class WireguardNetworkConfig(ABC):
+class WireguardConfig(ABC):
     """
     Wireguard network configuration file.
     """

@@ -66,11 +66,13 @@ class WireguardNode(WireguardObject):
     def __init__(
             self,
             identifier: uuid.UUID,
+            owner: uuid.UUID,
             name: str,
             address_list: list[IPv4Address | IPv4Network | IPv6Address | IPv6Network | None],
+            admin_approval: bool = True,
             node_type: NodeType = NodeType.PEER,
-            private_key: str = None,
             public_key: str = None,
+            private_key: str = None,
             endpoint: (str, int) = None,
     ):
         """
@@ -81,48 +83,14 @@ class WireguardNode(WireguardObject):
         :param node_type: Type of the node. Can be one of NodeType.PEER, NodeType.ROUTER, NodeType.ROUTED.
         """
         super().__init__(identifier)
+        self.owner = owner
         self.name = name
+        self.admin_approval = admin_approval
         self.node_type = node_type
         self.address_list = address_list
         self.private_key = private_key
         self.public_key = public_key
         self.endpoint = endpoint
-
-    # convert to json
-    def to_json(self) -> str:
-        """
-        Convert a WireguardNode object to a JSON string.
-        :return: JSON string
-        """
-        return dumps({
-            "name": self.name,
-            "uuid": str(self.uuid),
-            "node_type": self.node_type,
-            "address_list": self.address_list,
-            "private_key": self.private_key,
-            "public_key": self.public_key,
-            "endpoint": self.endpoint
-        },
-            ensure_ascii=False
-        )
-
-    @classmethod
-    def from_json(cls, json_node: str):
-        """
-        Convert a JSON string to a WireguardNode object.
-        :param json_node: JSON string
-        :return: WireguardNode object
-        """
-        node = loads(json_node)
-        return WireguardNode(
-            name=node["name"],
-            identifier=node["uuid"],
-            node_type=node["node_type"],
-            address_list=node["address_list"],
-            private_key=node["private_key"],
-            public_key=node["public_key"],
-            endpoint=node["endpoint"]
-        )
 
 
 class WireguardConnection(WireguardObject):
@@ -139,33 +107,6 @@ class WireguardConnection(WireguardObject):
         super().__init__(identifier)
         self.peers = peers
         self.preshared_key = preshared_key
-
-    def to_json(self) -> str:
-        """
-        Convert a WireguardConnection object to a JSON string.
-        :return: JSON string
-        """
-        return dumps({
-            "uuid": str(self.uuid),
-            "peers": self.peers,
-            "preshared_key": self.preshared_key
-        },
-            ensure_ascii=False
-        )
-
-    @classmethod
-    def from_json(cls, json_connection: str):
-        """
-        Convert a JSON string to a WireguardConnection object.
-        :param json_connection: JSON string
-        :return: WireguardConnection object
-        """
-        connection = loads(json_connection)
-        return WireguardConnection(
-            identifier=connection["uuid"],
-            peers=connection["peers"],
-            preshared_key=connection["preshared_key"]
-        )
 
 
 class WireguardNetwork(WireguardObject):
@@ -191,33 +132,3 @@ class WireguardNetwork(WireguardObject):
         self.name = name
         self.node_uuid_list = node_uuid_list
         self.connection_uuid_list = connection_uuid_list
-
-    def to_json(self) -> str:
-        """
-        Convert a WireguardNetwork object to a JSON string.
-        :return: JSON string
-        """
-        pass  # todo: implement this method
-
-    @classmethod
-    def from_json(cls, json_network: str):
-        """
-        Convert a JSON string to a WireguardNetwork object.
-        :param json_network: JSON string
-        :return: WireguardNetwork object
-        """
-        pass  # todo: implement this method
-
-    def refresh_edges(self):
-        """
-        Reconstruct edges according to ip addresses and given routes.
-        """
-        pass  # todo: implement this method
-
-    def gen_config(self, node_uuid: uuid.UUID):
-        """
-        Generate Wireguard config file for the given node.
-        :param node_uuid:
-        :return:
-        """
-        pass  # todo: decide if this method should be here or in standalone config generator
