@@ -132,15 +132,77 @@ class ConfigServer(ABC):
         pass
 
     def get_config(self, config_id: UUID):
-        pass
+        try:
+            response = requests.get(
+                url=self.url + "/config/" + str(config_id),
+                cookies=self.credential
+            )
+            # todo
+            match response.status_code:
+                case HTTPStatus.OK:
+                    pass  # todo
+                case HTTPStatus.UNAUTHORIZED:
+                    pass  # todo
+                case HTTPStatus.NOT_FOUND:
+                    pass  # todo
+                case HTTPStatus.INTERNAL_SERVER_ERROR:
+                    pass  # todo
+                case _:
+                    pass  # todo
+        except requests.exceptions.ConnectionError:
+            pass
 
-    def create_config(self, config_obj: wgconfig.WireguardConfig):
-        pass
+    def create_config(self, config_name: str):
+        try:
+            response = requests.post(
+                url=self.url + "/config/new",
+                cookies=self.credential,
+                data=msgpack.packb({
+                    "name": config_name
+                })
+            )
+            # todo
+            match response.status_code:
+                case HTTPStatus.CREATED:
+                    pass  # todo
+                case HTTPStatus.UNAUTHORIZED:
+                    pass  # todo
+                case HTTPStatus.INTERNAL_SERVER_ERROR:
+                    pass  # todo
+                case _:
+                    pass  # todo
+        except requests.exceptions.ConnectionError:
+            pass
 
-    def get_network_object(self, network_uuid: UUID, objects: list[UUID]):
-        pass
+    def get_network_object(self, network_uuid: UUID, object_uuid_list: list[UUID]):
+        try:
+            response = requests.get(
+                url=self.url + "/network/" + str(network_uuid),
+                cookies=self.credential,
+                data=msgpack.packb({
+                    "objects": object_uuid_list
+                })
+            )
+            # todo
+            match response.status_code:
+                case HTTPStatus.OK:
+                    pass  # todo
+                case HTTPStatus.UNAUTHORIZED:
+                    pass  # todo
+                case HTTPStatus.NOT_FOUND:
+                    pass  # todo
+                case HTTPStatus.INTERNAL_SERVER_ERROR:
+                    pass  # todo
+                case _:
+                    pass  # todo
+        except requests.exceptions.ConnectionError:
+            pass
 
-    def update_network_object(self, network_uuid: UUID, objects: list[wgobject.WireguardObject]):
+    def update_object(
+            self,
+            modification_list: list[message_format.NetworkModification],
+            object_list: list[wgobject.NetworkObject]
+    ):
         pass
 
     def join_network(self, network_uuid: UUID):
