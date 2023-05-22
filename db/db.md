@@ -43,7 +43,24 @@ list[IPv4Address | IPv4Network | IPv6Address | IPv6Network | None]
 - identifier(uuid与string类型的转换)
 - table self.hashed_password（bytes与string转换） 
 - table self.salt（bytes与string转换）
+
+# `二、massage.database`
+## 1.schema StandardResponse:
+### (1)table StandardResponse_self
+- code: int
+- message: string
+- content: （bytes与string转换）
 - 
+## 2.schema NetworkModification
+### (1)table NetworkModification_Action:
+- CREATE = 0(int)
+- DELETE = 1(int)
+- UPDATE = 2(int)
+### (2)table NetworkModification_self:
+- self.action = None(string)
+- self.content = None(string)
+
+
 #数据库与py之间的类型转换
 #### 一、Enum和int之间的转换
 - 1.将枚举类型转换为整数： 可以使用枚举成员的值（value）属性来获取枚举成员的整数值
