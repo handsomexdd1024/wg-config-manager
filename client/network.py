@@ -3,15 +3,15 @@ This module is responsible for connection handling, and provide a high-level int
 and receive responses from the server.
 """
 
-from uuid import UUID
-from http import client, cookies, HTTPStatus, HTTPMethod
 from abc import ABC
-import requests
+from http import HTTPStatus
+from uuid import UUID
+
 import msgpack
+import requests
+
 from core import *
 from core.message_format import *
-
-
 
 
 class ConfigServer(ABC):
@@ -24,10 +24,20 @@ class ConfigServer(ABC):
             url: str
     ):
         self.url = url
-        self.credential = None
         self.session = requests.Session()
 
-    def user_authenticate(self, username: str, password: str) -> (bool, UUID | None):
+    @classmethod
+    def response_handler(
+            cls,
+            response: requests.Response,
+            success_responses=None
+    ) -> tuple[bool, StandardResponse]:
+        if success_responses is None:
+            success_responses = [HTTPStatus.OK, HTTPStatus.CREATED, HTTPStatus.ACCEPTED]
+        if response.status_code in success_responses:
+            return True, StandardResponse.default_decoder(response.content)
+
+    def user_auth_request(self, username: str, password: str) -> [bool, UUID | str]:
         try:
             if self.session.cookies:
                 self.session.cookies.clear()
@@ -38,47 +48,32 @@ class ConfigServer(ABC):
                     "password": password
                 })
             )
-            match http_response.status_code:
-                case HTTPStatus.OK:
-                    self.credential = http_response.cookies
-                    if http_response.content:
-                        std_response = StandardResponse.default_decoder(http_response.content)
-                        if std_response.code == 0:
-                            return True, UUID(bytes=std_response.content)
-                        else:
-                            return False, None
-                case HTTPStatus.UNAUTHORIZED:
-                    return False, None
-                case HTTPStatus.INTERNAL_SERVER_ERROR:
-                    return False, None
-                case _:
-                    return False, None
+            app_response = self.response_handler(http_response)
+            if app_response[0]:
+                return True, UUID(bytes=app_response[1].content)
+            else:
+                return False, app_response[1].message
         except requests.exceptions.ConnectionError:
-            return False, None
-        # todo: add more error handling
+            return False, "Connection error"
 
-    def user_registration(self, username: str, password: str) -> bool:
+    def user_signup_request(self, username: str, password: str) -> [bool, None | str]:
         try:
-            response = self.session.post(
+            http_response = self.session.post(
                 url=self.url + "/register",
                 data=msgpack.packb({
                     "username": username,
                     "password": password
                 })
             )
-            match response.status_code:
-                case HTTPStatus.CREATED:
-                    return True
-                case HTTPStatus.CONFLICT:
-                    return False
-                case HTTPStatus.INTERNAL_SERVER_ERROR:
-                    return False
-                case _:
-                    return False
+            app_response = self.response_handler(http_response)
+            if app_response[0]:
+                return True, None
+            else:
+                return False, app_response[1].message
         except requests.exceptions.ConnectionError:
-            return False
+            return False, "Connection error"
 
-    def user_logout(self, username: str) -> bool:
+    def user_logout_request(self, username: str) -> (bool, str | None):
         try:
             response = self.session.post(
                 url=self.url + "/logout",
@@ -86,124 +81,121 @@ class ConfigServer(ABC):
                     "username": username
                 })
             )
-            match response.status_code:
-                case HTTPStatus.OK:
-                    self.session.cookies.clear()
-                    return True
-                case HTTPStatus.INTERNAL_SERVER_ERROR:
-                    return False
-                case _:
-                    return False
+            app_response = self.response_handler(response)
+            if app_response[0]:
+                self.session.cookies.clear()
+                return True, None
+            else:
+                return False, app_response[1].message
         except requests.exceptions.ConnectionError:
-            return False
+            return False, "Connection error"
 
-    def user_authenticate_token(self, token: str):
-        pass
-
-    def get_user_profile(self, user_id: UUID):
+    def get_user_profile(self, user_id: UUID) -> [bool, user.User | str]:
         try:
-            response = self.session.get(
+            http_response = self.session.get(
                 url=self.url + "/user/" + str(user_id),
             )
-            # todo
-            match response.status_code:
-                case HTTPStatus.OK:
-                    u = msgpack.unpackb(response.content, object_hook=user.User.default_decoder)
-                    assert isinstance(u, user.User)
-                    return u
-                case HTTPStatus.UNAUTHORIZED:
-                    pass  # todo
-                case HTTPStatus.NOT_FOUND:
-                    pass  # todo
-                case HTTPStatus.INTERNAL_SERVER_ERROR:
-                    pass  # todo
-                case _:
-                    pass  # todo
+            app_response = self.response_handler(http_response)
+            if app_response[0]:
+                return True, user.User.default_decoder(app_response[1].content)
+            else:
+                return False, app_response[1].message
         except requests.exceptions.ConnectionError:
-            pass  # todo
-        pass
+            return False, "Connection error"
 
     def update_user_profile(self, user_obj: user.User):
         pass
 
-    def get_config(self, config_id: UUID):
+    def get_config(self, config_id: UUID) -> [bool, wgconfig.WireguardConfig | str]:
         try:
-            response = requests.get(
+            http_response = self.session.get(
                 url=self.url + "/config/" + str(config_id),
-                cookies=self.credential
             )
             # todo
-            match response.status_code:
-                case HTTPStatus.OK:
-                    c = msgpack.unpackb(response.content, object_hook=wgobject.WireguardNetwork.default_decoder)
-                    assert isinstance(c, wgobject.WireguardNetwork)
-                    return c
-                case HTTPStatus.UNAUTHORIZED:
-                    pass  # todo
-                case HTTPStatus.NOT_FOUND:
-                    pass  # todo
-                case HTTPStatus.INTERNAL_SERVER_ERROR:
-                    pass  # todo
-                case _:
-                    pass  # todo
+            app_response = self.response_handler(http_response)
+            if app_response[0]:
+                return True, wgconfig.WireguardConfig.default_decoder(app_response[1].content)
+            else:
+                return False, app_response[1].message
         except requests.exceptions.ConnectionError:
             pass
 
     def create_config(self, config_name: str):
         try:
-            response = requests.post(
+            http_response = self.session.post(
                 url=self.url + "/config/new",
-                cookies=self.credential,
                 data=msgpack.packb({
                     "name": config_name
                 })
             )
-            # todo
-            match response.status_code:
-                case HTTPStatus.CREATED:
-                    pass  # todo
-                case HTTPStatus.UNAUTHORIZED:
-                    pass  # todo
-                case HTTPStatus.INTERNAL_SERVER_ERROR:
-                    pass  # todo
-                case _:
-                    pass  # todo
+            app_response = self.response_handler(http_response)
+            if app_response[0]:
+                pass  # todo: complete api design
+            else:
+                return False, app_response[1].message
         except requests.exceptions.ConnectionError:
-            pass
+            return False, "Connection error"
 
-    def get_network_object(self, network_uuid: UUID, object_uuid_list: list[UUID]):
+    def get_network_object(self, network_uuid: UUID, object_uuid_list: list[UUID]) \
+            -> [bool, list[wgobject.WireguardObject] | str]:
         try:
-            response = requests.get(
-                url=self.url + "/network/" + str(network_uuid),
-                cookies=self.credential,
+            http_response = self.session.get(
+                url=self.url + "/network/" + str(network_uuid) + "/object",
                 data=msgpack.packb({
-                    "objects": object_uuid_list
+                    "object_uuid_list": [object_id.bytes for object_id in object_uuid_list]
                 })
             )
-            # todo
-            match response.status_code:
-                case HTTPStatus.OK:
-                    pass  # todo
-                case HTTPStatus.UNAUTHORIZED:
-                    pass  # todo
-                case HTTPStatus.NOT_FOUND:
-                    pass  # todo
-                case HTTPStatus.INTERNAL_SERVER_ERROR:
-                    pass  # todo
-                case _:
-                    pass  # todo
+            app_response = self.response_handler(http_response)
+            if app_response[0]:
+                pass  # todo: design object decoding mechanism
+            else:
+                return False, app_response[1].message
         except requests.exceptions.ConnectionError:
-            pass
+            return False, "Connection error"
 
     def update_object(
             self,
             modification_list: list[message_format.NetworkModification],
-            object_list: list[wgobject.NetworkObject]
-    ):
-        pass
+            object_list: list[wgobject.WireguardObject]
+    ) -> [bool, None | str]:
+        try:
+            http_response = self.session.post(
+                url=self.url + "/object/update",
+                data=msgpack.packb({
+                    "modification_list": modification_list,
+                    "object_list": object_list
+                })
+            )
+            app_response = self.response_handler(http_response)
+            if app_response[0]:
+                return True, None
+            else:
+                return False, app_response[1].message
+        except requests.exceptions.ConnectionError:
+            return False, "Connection error"
 
-    def join_network(self, network_uuid: UUID):
-        pass
+    def join_network(self, network_uuid: UUID) -> [bool, None | str]:
+        try:
+            http_response = self.session.post(
+                url=self.url + "/network/" + str(network_uuid) + "/join",
+            )
+            app_response = self.response_handler(http_response)
+            if app_response[0]:
+                return True, None
+            else:
+                return False, app_response[1].message
+        except requests.exceptions.ConnectionError:
+            return False, "Connection error"
 
     def quit_network(self, network_uuid: UUID):
-        pass
+        try:
+            http_response = self.session.post(
+                url=self.url + "/network/" + str(network_uuid) + "/quit",
+            )
+            app_response = self.response_handler(http_response)
+            if app_response[0]:
+                return True, None
+            else:
+                return False, app_response[1].message
+        except requests.exceptions.ConnectionError:
+            return False, "Connection error"

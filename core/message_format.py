@@ -19,7 +19,7 @@ class StandardResponse(ABC):
             self,
             code: int,
             message: str,
-            content: bytes
+            content: bytes | None
     ):
         self.code = code
         self.message = message
@@ -35,10 +35,10 @@ class StandardResponse(ABC):
                 "content": o.content
             }
         else:
-            return None
+            raise TypeError("Object is not a StandardResponse")
 
     @staticmethod
-    def default_decoder(data: bytes):
+    def default_decoder(data: bytes) -> "StandardResponse":
         content = msgpack.unpackb(data)
         if isinstance(content, dict):
             return StandardResponse(
@@ -47,10 +47,10 @@ class StandardResponse(ABC):
                 content=content["content"]
             )
         else:
-            return None
+            raise TypeError("Object is not a StandardResponse")
 
 
-class NetworkModification:
+class NetworkModification(ABC):
     class Action:
         CREATE = 0
         DELETE = 1

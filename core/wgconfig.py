@@ -43,6 +43,33 @@ class WireguardConfig(ABC):
 
     # todo: add more possible objects and methods
 
+    @staticmethod
+    def default_encoder(o):
+        if isinstance(o, WireguardConfig):
+            return {
+                "__WireguardConfig__": True,
+                "uuid": o.identifier.bytes,
+                "name": o.name,
+                "owner": o.owner.bytes,
+                "user_list": [i.bytes for i in o.user_list],
+                "network_uuid": o.network_uuid.bytes
+            }
+        else:
+            raise ValueError("Not a WireguardConfig object.")
+
+    @staticmethod
+    def default_decoder(o):
+        if "__WireguardConfig__" in o:
+            return WireguardConfig(
+                identifier=UUID(bytes=o["uuid"]),
+                name=o["name"],
+                owner=UUID(bytes=o["owner"]),
+                user_list=[UUID(bytes=i) for i in o["user_list"]],
+                network_uuid=UUID(bytes=o["network_uuid"])
+            )
+        else:
+            raise ValueError("Not a WireguardConfig object.")
+
 
 def config_generator(
         network: WireguardNetwork,

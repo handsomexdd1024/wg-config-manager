@@ -27,12 +27,19 @@ class WireguardObject(ABC):
     This class represents an abstract Wireguard object (node, connection, network, etc.) with a unique uuid.
     """
 
-    def __init__(self, identifier: uuid.UUID):
+    class ObjectType(Enum):
+        UNSPECIFIED = 0
+        NODE = 1
+        CONNECTION = 2
+        NETWORK = 3
+
+    def __init__(self, identifier: uuid.UUID, object_type: ObjectType):
         """
         Initialize a WireguardObject.
         :param identifier: UUID of the object.
         """
         self.uuid = identifier
+        self.object_type = object_type
 
     def __eq__(self, other):
         if isinstance(other, WireguardObject):
@@ -71,25 +78,17 @@ class WireguardNode(WireguardObject):
         """
         Initialize a WireGuard node.
         """
-        super().__init__(identifier)
+        super().__init__(identifier, WireguardObject.ObjectType.NODE)
         self.owner = owner
         self.name = name
         self.admin_approval = admin_approval
         self.node_type = node_type
         self.address_list = address_list
-        if private_key is not None:
-            self.private_key = private_key
-            if public_key is not None:
-                if private_key.public_key() != public_key:
-                    raise ValueError("Cannot specify both private key and public key.")
-                else:
-                    self.public_key = public_key
-            else:
-                self.public_key = private_key.public_key()
-        elif public_key is not None:
-            self.public_key = public_key
+        if public_key is not None and private_key is not None and public_key != private_key.public_key():
+            raise ValueError("Public key does not match private key.")
         else:
-            raise ValueError("Must specify either private key or public key.")
+            self.public_key = public_key
+            self.private_key = private_key
         self.endpoint = endpoint
 
     @staticmethod
@@ -101,7 +100,7 @@ class WireguardNode(WireguardObject):
         """
         if isinstance(o, WireguardNode):
             return {
-                "__WireguardNode__": True,
+                "type": o.object_type.value,
                 "uuid": o.uuid.bytes,
                 "owner": o.owner.bytes,
                 "name": o.name,
@@ -120,7 +119,7 @@ class WireguardNode(WireguardObject):
         :param o: Dict of WireguardNode.
         :return: WireguardNode object.
         """
-        if "__WireguardNode__" in o:
+        if o["type"] == WireguardObject.ObjectType.NODE.value:
             return WireguardNode(
                 identifier=uuid.UUID(bytes=o["uuid"]),
                 owner=uuid.UUID(bytes=o["owner"]),
@@ -147,7 +146,7 @@ class WireguardConnection(WireguardObject):
             peers: (uuid.UUID, uuid.UUID),
             preshared_key: WireguardKey | None
     ):
-        super().__init__(identifier)
+        super().__init__(identifier, WireguardObject.ObjectType.CONNECTION)
         self.peers = peers
         self.preshared_key = preshared_key
 
@@ -160,7 +159,7 @@ class WireguardConnection(WireguardObject):
         """
         if isinstance(o, WireguardConnection):
             return {
-                "__WireguardConnection__": True,
+                "type": o.object_type.value,
                 "uuid": o.uuid.bytes,
                 "peers": [i.bytes for i in o.peers],
                 "preshared_key": o.preshared_key.keydata if o.preshared_key is not None else None
@@ -175,7 +174,7 @@ class WireguardConnection(WireguardObject):
         :param o: Dict of WireguardConnection.
         :return: WireguardConnection object.
         """
-        if "__WireguardConnection__" in o:
+        if o["type"] == WireguardObject.ObjectType.CONNECTION.value:
             return WireguardConnection(
                 identifier=uuid.UUID(bytes=o["uuid"]),
                 peers=[uuid.UUID(bytes=i) for i in o["peers"]],
@@ -204,7 +203,7 @@ class WireguardNetwork(WireguardObject):
         :param node_uuid_list: List of UUIDs of the nodes in the network.
         :param connection_uuid_list: List of UUIDs of the connections in the network.
         """
-        super().__init__(identifier)
+        super().__init__(identifier, WireguardObject.ObjectType.NETWORK)
         self.name = name
         self.node_uuid_list = node_uuid_list
         self.connection_uuid_list = connection_uuid_list
@@ -218,7 +217,7 @@ class WireguardNetwork(WireguardObject):
         """
         if isinstance(o, WireguardNetwork):
             return {
-                "__WireguardNetwork__": True,
+                "type": o.object_type.value,
                 "uuid": o.uuid.bytes,
                 "name": o.name,
                 "node_uuid_list": [i.bytes for i in o.node_uuid_list],
@@ -234,7 +233,7 @@ class WireguardNetwork(WireguardObject):
         :param o: Dict of WireguardNetwork.
         :return: WireguardNetwork object.
         """
-        if "__WireguardNetwork__" in o:
+        if o["type"] == WireguardObject.ObjectType.NETWORK.value:
             return WireguardNetwork(
                 identifier=uuid.UUID(bytes=o["uuid"]),
                 name=o["name"],
