@@ -13,7 +13,7 @@ from ipaddress import (
     IPv6Network
 )
 import uuid
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from enum import Enum
 import json
 from wireguard_tools.wireguard_key import (
@@ -92,8 +92,8 @@ class WireguardNode(WireguardObject):
             raise ValueError("Must specify either private key or public key.")
         self.endpoint = endpoint
 
-    @classmethod
-    def default_encoder(cls, o):
+    @staticmethod
+    def default_encoder(o):
         """
         Msgpack encoder for WireguardNode.
         :param o: WireguardNode object.
@@ -113,8 +113,8 @@ class WireguardNode(WireguardObject):
                 "endpoint": o.endpoint
             }
 
-    @classmethod
-    def default_decoder(cls, o):
+    @staticmethod
+    def default_decoder(o):
         """
         Msgpack decoder for WireguardNode.
         :param o: Dict of WireguardNode.
@@ -151,8 +151,8 @@ class WireguardConnection(WireguardObject):
         self.peers = peers
         self.preshared_key = preshared_key
 
-    @classmethod
-    def default_encoder(cls, o):
+    @staticmethod
+    def default_encoder(o):
         """
         Msgpack encoder for WireguardConnection.
         :param o: WireguardConnection object.
@@ -168,8 +168,8 @@ class WireguardConnection(WireguardObject):
         else:
             raise ValueError("Not a WireguardConnection object.")
 
-    @classmethod
-    def default_decoder(cls, o):
+    @staticmethod
+    def default_decoder(o):
         """
         Msgpack decoder for WireguardConnection.
         :param o: Dict of WireguardConnection.
@@ -209,8 +209,8 @@ class WireguardNetwork(WireguardObject):
         self.node_uuid_list = node_uuid_list
         self.connection_uuid_list = connection_uuid_list
 
-    @classmethod
-    def default_encoder(cls, o):
+    @staticmethod
+    def default_encoder(o):
         """
         Msgpack encoder for WireguardNetwork.
         :param o: WireguardNetwork object.
@@ -227,8 +227,8 @@ class WireguardNetwork(WireguardObject):
         else:
             raise ValueError("Not a WireguardNetwork object.")
 
-    @classmethod
-    def default_decoder(cls, o):
+    @staticmethod
+    def default_decoder(o):
         """
         Msgpack decoder for WireguardNetwork.
         :param o: Dict of WireguardNetwork.

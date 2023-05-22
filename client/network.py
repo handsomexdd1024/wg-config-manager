@@ -9,7 +9,9 @@ from abc import ABC
 import requests
 import msgpack
 from core import *
-from message_format import *
+from core.message_format import *
+
+
 
 
 class ConfigServer(ABC):
@@ -40,7 +42,7 @@ class ConfigServer(ABC):
                 case HTTPStatus.OK:
                     self.credential = http_response.cookies
                     if http_response.content:
-                        std_response = StandardResponse.unpack(http_response.content)
+                        std_response = StandardResponse.default_decoder(http_response.content)
                         if std_response.code == 0:
                             return True, UUID(bytes=std_response.content)
                         else:
@@ -106,7 +108,9 @@ class ConfigServer(ABC):
             # todo
             match response.status_code:
                 case HTTPStatus.OK:
-                    pass  # todo
+                    u = msgpack.unpackb(response.content, object_hook=user.User.default_decoder)
+                    assert isinstance(u, user.User)
+                    return u
                 case HTTPStatus.UNAUTHORIZED:
                     pass  # todo
                 case HTTPStatus.NOT_FOUND:
@@ -131,7 +135,9 @@ class ConfigServer(ABC):
             # todo
             match response.status_code:
                 case HTTPStatus.OK:
-                    pass  # todo
+                    c = msgpack.unpackb(response.content, object_hook=wgobject.WireguardNetwork.default_decoder)
+                    assert isinstance(c, wgobject.WireguardNetwork)
+                    return c
                 case HTTPStatus.UNAUTHORIZED:
                     pass  # todo
                 case HTTPStatus.NOT_FOUND:

@@ -25,15 +25,20 @@ class StandardResponse(ABC):
         self.message = message
         self.content = content
 
-    def pack(self):
-        return msgpack.packb({
-            "code": self.code,
-            "message": self.message,
-            "content": self.content
-        })
+    @staticmethod
+    def default_encoder(o):
+        if isinstance(o, StandardResponse):
+            return {
+                "__StandardResponse__": True,
+                "code": o.code,
+                "message": o.message,
+                "content": o.content
+            }
+        else:
+            return None
 
     @staticmethod
-    def unpack(data: bytes):
+    def default_decoder(data: bytes):
         content = msgpack.unpackb(data)
         if isinstance(content, dict):
             return StandardResponse(
@@ -46,7 +51,6 @@ class StandardResponse(ABC):
 
 
 class NetworkModification:
-
     class Action:
         CREATE = 0
         DELETE = 1

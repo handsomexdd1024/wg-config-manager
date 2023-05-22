@@ -2,7 +2,7 @@ import ipaddress
 
 import wireguard_tools
 
-import wgobject
+from core import wgobject
 import uuid
 import msgpack
 

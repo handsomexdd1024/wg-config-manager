@@ -29,24 +29,28 @@ class User(ABC):
         self.hashed_password = hashed_password
         self.salt = salt
 
-    def pack(self):
-        return msgpack.packb({
-            "uuid": self.uuid.bytes,
-            "name": self.name,
-            "hashed_password": self.hashed_password,
-            "salt": self.salt
-        })
+    @staticmethod
+    def default_decoder(o):
+        if "__User__" in o:
+            return User(
+                uuid.UUID(bytes=o["uuid"]),
+                o["name"],
+                o["hashed_password"],
+                o["salt"]
+            )
+        else:
+            return None  # todo: raise error
 
     @staticmethod
-    def unpack(data: bytes):
-        content = msgpack.unpackb(data)
-        if isinstance(content, dict):
-            return User(
-                identifier=uuid.UUID(bytes=content["uuid"]),
-                name=content["name"],
-                hashed_password=content["hashed_password"],
-                salt=content["salt"]
-            )
+    def default_encoder(o):
+        if isinstance(o, User):
+            return {
+                "__User__": True,
+                "uuid": o.uuid.bytes,
+                "name": o.name,
+                "hashed_password": o.hashed_password,
+                "salt": o.salt
+            }
         else:
             return None
 
