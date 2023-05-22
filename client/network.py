@@ -9,22 +9,7 @@ from abc import ABC
 import requests
 import msgpack
 from core import *
-
-
-class StandardResponse(ABC):
-    """
-    This class represents a standard response body from the server.
-    """
-
-    def __init__(
-            self,
-            code: int,
-            message: str,
-            content
-    ):
-        self.code = code
-        self.message = message
-        self.content = content
+from message_format import *
 
 
 class ConfigServer(ABC):
@@ -38,33 +23,41 @@ class ConfigServer(ABC):
     ):
         self.url = url
         self.credential = None
+        self.session = requests.Session()
 
-    def user_authenticate(self, username: str, password: str):
+    def user_authenticate(self, username: str, password: str) -> (bool, UUID | None):
         try:
-            response = requests.post(
-                url=self.url + "/login",
+            if self.session.cookies:
+                self.session.cookies.clear()
+            http_response = self.session.post(
+                url=self.url + "/login/pwd",
                 data=msgpack.packb({
                     "username": username,
                     "password": password
                 })
             )
-            match response.status_code:
+            match http_response.status_code:
                 case HTTPStatus.OK:
-                    self.credential = response.cookies
-                    return True
-                # TODO: ADD DETAILED ERROR HANDLING
+                    self.credential = http_response.cookies
+                    if http_response.content:
+                        std_response = StandardResponse.unpack(http_response.content)
+                        if std_response.code == 0:
+                            return True, UUID(bytes=std_response.content)
+                        else:
+                            return False, None
                 case HTTPStatus.UNAUTHORIZED:
-                    return False
+                    return False, None
                 case HTTPStatus.INTERNAL_SERVER_ERROR:
-                    return False
+                    return False, None
                 case _:
-                    return False
+                    return False, None
         except requests.exceptions.ConnectionError:
-            return False
+            return False, None
+        # todo: add more error handling
 
-    def user_registration(self, username: str, password: str):
+    def user_registration(self, username: str, password: str) -> bool:
         try:
-            response = requests.post(
+            response = self.session.post(
                 url=self.url + "/register",
                 data=msgpack.packb({
                     "username": username,
@@ -83,9 +76,9 @@ class ConfigServer(ABC):
         except requests.exceptions.ConnectionError:
             return False
 
-    def user_logout(self, username: str):
+    def user_logout(self, username: str) -> bool:
         try:
-            response = requests.post(
+            response = self.session.post(
                 url=self.url + "/logout",
                 data=msgpack.packb({
                     "username": username
@@ -93,9 +86,8 @@ class ConfigServer(ABC):
             )
             match response.status_code:
                 case HTTPStatus.OK:
+                    self.session.cookies.clear()
                     return True
-                case HTTPStatus.UNAUTHORIZED:
-                    return False
                 case HTTPStatus.INTERNAL_SERVER_ERROR:
                     return False
                 case _:
@@ -108,9 +100,8 @@ class ConfigServer(ABC):
 
     def get_user_profile(self, user_id: UUID):
         try:
-            response = requests.get(
+            response = self.session.get(
                 url=self.url + "/user/" + str(user_id),
-                cookies=self.credential
             )
             # todo
             match response.status_code:

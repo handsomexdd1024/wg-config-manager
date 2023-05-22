@@ -2,9 +2,12 @@
 This module contains the network message format.
 """
 
-import json
+__all__ = ["StandardResponse", "NetworkModification"]
+
 from enum import Enum
 from abc import ABC
+
+import msgpack
 
 
 class StandardResponse(ABC):
@@ -16,11 +19,30 @@ class StandardResponse(ABC):
             self,
             code: int,
             message: str,
-            content
+            content: bytes
     ):
         self.code = code
         self.message = message
         self.content = content
+
+    def pack(self):
+        return msgpack.packb({
+            "code": self.code,
+            "message": self.message,
+            "content": self.content
+        })
+
+    @staticmethod
+    def unpack(data: bytes):
+        content = msgpack.unpackb(data)
+        if isinstance(content, dict):
+            return StandardResponse(
+                code=content["code"],
+                message=content["message"] if "message" in content else "",
+                content=content["content"]
+            )
+        else:
+            return None
 
 
 class NetworkModification:
