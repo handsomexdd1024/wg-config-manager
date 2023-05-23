@@ -16,7 +16,9 @@ class Config:
         try:
             self.listen_address = config["listen_address"]
             self.listen_port = config["listen_port"]
-            self.db_url = config["db_url"]
+            self.db_address = config["db_address"]
+            self.db_port = config["db_port"]
+            self.db_name = config["db_name"]
             self.db_user = config["db_user"]
             self.db_pwd = config["db_pwd"]
         except KeyError:
