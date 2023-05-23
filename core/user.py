@@ -6,9 +6,9 @@ User module for WireGuard configuration management system.
 """
 
 from abc import ABC, abstractmethod
-import bcrypt
-import uuid
 
+import uuid
+import bcrypt
 import msgpack
 
 

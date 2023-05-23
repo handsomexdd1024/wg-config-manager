@@ -11,7 +11,7 @@ import msgpack
 import requests
 
 from core import *
-from core.message_format import *
+from core.msg_format import *
 
 
 class ConfigServer(ABC):
@@ -34,8 +34,7 @@ class ConfigServer(ABC):
     ) -> tuple[bool, StandardResponse]:
         if success_responses is None:
             success_responses = [HTTPStatus.OK, HTTPStatus.CREATED, HTTPStatus.ACCEPTED]
-        if response.status_code in success_responses:
-            return True, StandardResponse.default_decoder(response.content)
+        return response.status_code in success_responses, StandardResponse.default_decoder(response.content)
 
     def user_auth_request(self, username: str, password: str) -> [bool, UUID | str]:
         try:
@@ -73,7 +72,7 @@ class ConfigServer(ABC):
         except requests.exceptions.ConnectionError:
             return False, "Connection error"
 
-    def user_logout_request(self, username: str) -> (bool, str | None):
+    def user_logout_request(self, username: str) -> (bool, None | str):
         try:
             response = self.session.post(
                 url=self.url + "/logout",
@@ -120,7 +119,7 @@ class ConfigServer(ABC):
         except requests.exceptions.ConnectionError:
             pass
 
-    def create_config(self, config_name: str):
+    def create_config(self, config_name: str) -> [bool, wgconfig.WireguardConfig | str]:
         try:
             http_response = self.session.post(
                 url=self.url + "/config/new",
@@ -130,7 +129,7 @@ class ConfigServer(ABC):
             )
             app_response = self.response_handler(http_response)
             if app_response[0]:
-                pass  # todo: complete api design
+                return True, wgconfig.WireguardConfig.default_decoder(app_response[1].content)
             else:
                 return False, app_response[1].message
         except requests.exceptions.ConnectionError:
@@ -147,7 +146,19 @@ class ConfigServer(ABC):
             )
             app_response = self.response_handler(http_response)
             if app_response[0]:
-                pass  # todo: design object decoding mechanism
+                raw_list = msgpack.unpackb(app_response[1].content, raw=False)
+                object_list = []
+                for o in raw_list:
+                    match o[0]:
+                        case wgobject.WireguardObject.ObjectType.NODE.value:
+                            object_list.append(wgobject.WireguardNode.default_decoder(o[1]))
+                        case wgobject.WireguardObject.ObjectType.CONNECTION.value:
+                            object_list.append(wgobject.WireguardConnection.default_decoder(o[1]))
+                        case wgobject.WireguardObject.ObjectType.NETWORK.value:
+                            object_list.append(wgobject.WireguardNetwork.default_decoder(o[1]))
+                        case _:
+                            pass
+                return True, object_list
             else:
                 return False, app_response[1].message
         except requests.exceptions.ConnectionError:
@@ -155,7 +166,7 @@ class ConfigServer(ABC):
 
     def update_object(
             self,
-            modification_list: list[message_format.NetworkModification],
+            modification_list: list[msg_format.NetworkModification],
             object_list: list[wgobject.WireguardObject]
     ) -> [bool, None | str]:
         try:

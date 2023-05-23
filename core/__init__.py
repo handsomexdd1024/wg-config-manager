@@ -1,1 +1,1 @@
-__all__ = ["wgconfig", "wgobject", "user", "message_format"]
+__all__ = ["wgconfig", "wgobject", "user", "msg_format"]
