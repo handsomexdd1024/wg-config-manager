@@ -13,44 +13,65 @@
 - DOMAIN = 2（int）
 
 ### (3)table self
-- 包含：name（string）， 
+- 包含：
+- identifier: uuid.UUID **_(PRIMARY KEY)_**
+- owner: uuid.UUID,
+- name（string）， 
+- address_list:(实现list与string之间转换）
+list[IPv4Address | IPv4Network | IPv6Address | IPv6Network | None]
+- admin_approval: bool
 - node_type（PEER与string之间转换）
 - private_key: （string） 
 - public_key: （string） 
-- endpoint: (string and int)（endpoint: (str, int) | None = None）
-- address_list:(实现list与string之间转换）
-list[IPv4Address | IPv4Network | IPv6Address | IPv6Network | None]
+- endpoint: string（两数之间用逗号隔开）（endpoint: (str, int) | None = None）
 
-## 2.schema WireguardConnection(ABC)
-### (1)table WireguardConnection.self.
-- dentifier:uuid(UUID与string类型的转换)
+
+## 2.schema WireguardObject
+### (1)table ObjectType(Enum和四个int之间的转换)：
+- UNSPECIFIED = 0 （int）
+- NODE = 1 （int）
+- CONNECTION = 2 （int）
+- NETWORK = 3（int）
+### (2)table self
+- identifier: uuid.UUID,**_(PRIMARY KEY)_**
+- **_object_type_**
+## 3.schema WireguardConnection(ABC)
+### (1)table WireguardConnection.self
+- dentifier:uuid(UUID与string类型的转换)**_(PRIMARY KEY)_**
 - peers:uuid,uuid(UUID与string类型的转换：将其转换为一个string，其中以空格隔开)（peers: (uuid.UUID, uuid.UUID),）
 - preshared_key: string | None
 
-## 3.schema WireguardNetwork
+## 4.schema WireguardNetwork
 ### (1)table WireguardNetwork.self
-- dentifier:uuid(UUID与string类型的转换)
+- dentifier:uuid(UUID与string类型的转换)**_(PRIMARY KEY)_**
 - name: string 
-- node_list:WireguardNode(list与string类型转换)
-- connection_list:WireguardConnection(list与string类型转换)
+- node_uuid_list:WireguardNode(list与string类型转换)
+- connection_uuid_list:WireguardConnection(list与string类型转换)
 
 
 # `二、user.database`
 ## 1.schema user_self:
 ### (1)table user_self
+- identifier(uuid与string类型的转换) **_(PRIMARY KEY)_**
+- name（string）
+- hashed_password（bytes与string转换） 
+- salt（bytes与string转换）
 
-- name（string） 
-- identifier(uuid与string类型的转换)
-- table self.hashed_password（bytes与string转换） 
-- table self.salt（bytes与string转换）
+# `三、WireguardConfig.database`
+## 1.schema WireguardConfig:
+- identifier: uuid.UUID **_(PRIMARY KEY)_**
+- owner: uuid.UUID,
+- name（string）， 
+- address_list:(实现list与string之间转换）
+- network_uuid: UUID
 
-# `二、massage.database`
+# `四、massage.database`
 ## 1.schema StandardResponse:
 ### (1)table StandardResponse_self
 - code: int
 - message: string
 - content: （bytes与string转换）
-- 
+
 ## 2.schema NetworkModification
 ### (1)table NetworkModification_Action:
 - CREATE = 0(int)
