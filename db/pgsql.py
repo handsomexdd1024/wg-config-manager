@@ -1,8 +1,8 @@
 
-# 连接到PostgreSQL数据库
-import psycopg2
+# 连接到Postgres数据库
+import psycopg
 
-conn = psycopg2.connect(
+conn = psycopg.connect(
     host="localhost",
     port="5432",
     database="mydatabase",
