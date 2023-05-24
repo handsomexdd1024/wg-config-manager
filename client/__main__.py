@@ -180,12 +180,65 @@ class MainWindow(QWidget):
         # 设置边框宽度
         self.right_splitter.setHandleWidth(5)
 
-        # 创建底部按钮,用于新建配置文件
+        # 创建file区底部按钮,用于新建配置文件
         self.file_button = QPushButton("New config", self.file_widget)
         self.file_layout.addStretch()
         self.file_layout.addWidget(self.file_button, alignment=Qt.AlignCenter)
         self.file_button.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
         self.file_button.clicked.connect(self.new_config)
+
+        # 按钮区域使用垂直布局
+        self.bottom_button_layout = QVBoxLayout(self.bottom_button_widget)
+        self.bottom_button_layout.addStretch()
+
+        # 创建底部create按钮,用于新增node
+        self.create_node_button = QPushButton("New node", self.bottom_button_widget)
+        self.bottom_button_layout.addWidget(self.create_node_button, alignment=Qt.AlignCenter)
+        self.create_node_button.setStyleSheet('color: white; font-size: 25px; font-family: "Microsoft YaHei"')
+        self.create_node_button.clicked.connect(self.create_wireguard_node)
+
+        # 创建底部update按钮,用于修改node
+        self.update_node_button = QPushButton("Update node", self.bottom_button_widget)
+        self.bottom_button_layout.addWidget(self.update_node_button, alignment=Qt.AlignCenter)
+        self.update_node_button.setStyleSheet('color: white; font-size: 25px; font-family: "Microsoft YaHei"')
+        self.update_node_button.clicked.connect(self.update_wireguard_node)
+
+        # 创建底部delete按钮,用于删除node
+        self.delete_node_button = QPushButton("Delete node", self.bottom_button_widget)
+        self.bottom_button_layout.addWidget(self.delete_node_button, alignment=Qt.AlignCenter)
+        self.delete_node_button.setStyleSheet('color: white; font-size: 25px; font-family: "Microsoft YaHei"')
+        self.delete_node_button.clicked.connect(self.delete_wireguard_node)
+
+        # 创建底部create_link按钮,用于生成边链接
+        self.create_link_button = QPushButton("Generate link", self.bottom_button_widget)
+        self.bottom_button_layout.addWidget(self.create_link_button, alignment=Qt.AlignCenter)
+        self.create_link_button.setStyleSheet('color: white; font-size: 25px; font-family: "Microsoft YaHei"')
+        self.create_link_button.clicked.connect(self.create_link)
+
+        # 创建底部logout按钮,用于登出（红色）
+        self.logout_button = QPushButton("Logout", self.bottom_button_widget)
+        self.bottom_button_layout.addWidget(self.logout_button, alignment=Qt.AlignCenter)
+        self.logout_button.setStyleSheet('color: red; font-size: 20px; font-family: "Microsoft YaHei"')
+        self.logout_button.clicked.connect(self.logout)
+
+        # 将所有按钮统一设置为圆角，且宽度相同
+        self.file_button.setFixedWidth(220)
+        self.create_node_button.setFixedWidth(220)
+        self.update_node_button.setFixedWidth(220)
+        self.delete_node_button.setFixedWidth(220)
+        self.create_link_button.setFixedWidth(220)
+        self.logout_button.setFixedWidth(220)
+        self.file_button.setFixedHeight(50)
+        self.create_node_button.setFixedHeight(50)
+        self.update_node_button.setFixedHeight(50)
+        self.delete_node_button.setFixedHeight(50)
+        self.create_link_button.setFixedHeight(50)
+        self.logout_button.setFixedHeight(50)
+        self.create_node_button.setStyleSheet('border-radius: 10px')
+        self.update_node_button.setStyleSheet('border-radius: 10px')
+        self.delete_node_button.setStyleSheet('border-radius: 10px')
+        self.create_link_button.setStyleSheet('border-radius: 10px')
+        self.logout_button.setStyleSheet('border-radius: 10px; color:#c75450')
 
     def get_network_info(self):
         # TODO: 在此处编写获取该用户网络信息的代码
@@ -206,7 +259,7 @@ class MainWindow(QWidget):
     def show_node(self):
         # TODO: 在此处编写显示点击的的节点信息的代码
         pass
-    
+
     def update_wireguard_node(self):
         # TODO: 在此处编写修改节点信息的代码
         pass
@@ -214,7 +267,7 @@ class MainWindow(QWidget):
     def create_wireguard_node(self):
         # TODO: 在此处编写新建节点信息的代码
         pass
-    
+
     def delete_wireguard_node(self):
         # TODO: 在此处编写删除节点信息的代码
         pass
@@ -222,6 +275,15 @@ class MainWindow(QWidget):
     def generate_config(self):
         # TODO: 在此处编写生成配置文件的代码
         pass
+
+    def create_link(self):
+        # TODO: 在此处编写生成边链接的代码
+        pass
+
+    def logout(self):
+        # TODO: 在此处编写登出的代码
+        pass
+
 
 class ChildDialogUi(QDialog):
     def __init__(self, text):
