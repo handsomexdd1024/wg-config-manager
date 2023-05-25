@@ -2,8 +2,12 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor, QPixmap, QMovie
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QSplitter, QDialog, QScrollArea
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButton, QSplitter, QDialog, QScrollArea, \
+    QVBoxLayout, QHBoxLayout
+from PyQt5.QtWebEngineWidgets import QWebEngineView
 from qt_material import apply_stylesheet
+from pyvis.network import Network
+import networkx as nx
 
 
 # 创建应用程序对象
@@ -114,9 +118,6 @@ class LoginWindow(QWidget):
     # 主界面
 
 
-from PyQt5.QtWidgets import QVBoxLayout, QScrollArea
-
-
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -157,6 +158,13 @@ class MainWindow(QWidget):
         # 创建右侧上方的主窗口
         self.top_widget = QWidget(self.right_splitter)
         self.top_widget.setStyleSheet('background-color: #3c3f41')
+        self.top_layout = QVBoxLayout(self.top_widget)
+
+        # 将生成的图加载到top_widget中
+        self.graph_view = QWebEngineView(self.top_widget)
+
+        # 设置graph_view占满整个top_widget
+        self.top_layout.addWidget(self.graph_view)
 
         # 底部创建一个水平分割栏，用于设置三个按钮，分别为更新、添加、删除
         self.bottom_splitter = QSplitter(Qt.Horizontal, self.right_splitter)
@@ -239,6 +247,31 @@ class MainWindow(QWidget):
         self.delete_node_button.setStyleSheet('border-radius: 10px')
         self.create_link_button.setStyleSheet('border-radius: 10px')
         self.logout_button.setStyleSheet('border-radius: 10px; color:#c75450')
+
+        self.show_graphic()
+
+    def show_graphic(self):
+        nx_graph = nx.cycle_graph(10)
+        nx_graph.add_node(1, size=20, label='Jayson', title='Jayson', group=1)
+        nx_graph.add_node(2, size=25, label='Billy', title='Billy', group=1)
+        nx_graph.add_node(3, size=15, label='Katherine', title='Katherine', group=1)
+        nx_graph.add_edge(1, 2, weight=0.5, color='red')
+        nx_graph.add_edge(1, 3, weight=0.5, color='green')
+        nx_graph.add_edge(2, 3, weight=0.5, color='blue')
+        nx_graph.add_node(4, size=10, label='Lonely', title='Lonely', group=2)
+
+        '''此处可以用networkx，An easy way to visualize and construct pyvis networks is to use Networkx and use pyvis’s 
+        built-in networkx helper method to translate the graph. Note that the Networkx node properties with the same 
+        names as those consumed by pyvis (e.g., ) are translated directly to the correspondingly-named pyvis node 
+        attributes 
+        
+        nt = Network('500px', '500px') nt.from_nx(nx_graph)'''
+
+        url = QUrl(QFileInfo("./nx.html").absoluteFilePath())
+        self.graph_view.load(url)
+        self.graph_view.show()
+
+        # nt.show_buttons(filter_=['physics'])
 
     def get_network_info(self):
         # TODO: 在此处编写获取该用户网络信息的代码
@@ -380,4 +413,5 @@ if __name__ == '__main__':
     window = LoginWindow()
     apply_stylesheet(app, theme='dark_teal.xml', invert_secondary=True, extra=extra)
     window.show()
+
     sys.exit(app.exec_())
