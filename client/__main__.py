@@ -248,9 +248,13 @@ class MainWindow(QWidget):
         self.create_link_button.setStyleSheet('border-radius: 10px')
         self.logout_button.setStyleSheet('border-radius: 10px; color:#c75450')
 
-        self.show_graphic()
+        self.init_network()
+        self.simple_show_graph()
+        self.show_filter_menu()
 
-    def show_graphic(self):
+    def init_network(self):
+        # 创建一个network
+        self.nt = Network(height="750px", width="100%", bgcolor="#222222", font_color="white", filter_menu=True)
         nx_graph = nx.cycle_graph(10)
         nx_graph.add_node(1, size=20, label='Jayson', title='Jayson', group=1)
         nx_graph.add_node(2, size=25, label='Billy', title='Billy', group=1)
@@ -260,18 +264,83 @@ class MainWindow(QWidget):
         nx_graph.add_edge(2, 3, weight=0.5, color='blue')
         nx_graph.add_node(4, size=10, label='Lonely', title='Lonely', group=2)
 
-        '''此处可以用networkx，An easy way to visualize and construct pyvis networks is to use Networkx and use pyvis’s 
+        '''此处使用networkx，An easy way to visualize and construct pyvis networks is to use Networkx and use pyvis’s 
         built-in networkx helper method to translate the graph. Note that the Networkx node properties with the same 
         names as those consumed by pyvis (e.g., ) are translated directly to the correspondingly-named pyvis node 
-        attributes 
-        
-        nt = Network('500px', '500px') nt.from_nx(nx_graph)'''
+        attributes '''
 
+        # 将pyvis的network转换为networkx的graph
+        self.nt.from_nx(nx_graph)
+
+    # 保存对图展示模式的修改
+    def change_graph_html(self):
+        self.nt.write_html("nx.html", open_browser=False)
+
+    def init_show_graph(self):
+        """load图的路径，不涉及展示"""
         url = QUrl(QFileInfo("./nx.html").absoluteFilePath())
         self.graph_view.load(url)
+
+    # 最普通的展示图
+    def simple_show_graph(self):
+        """展示最基础的图，不涉及任何附加功能"""
+        self.init_show_graph()
         self.graph_view.show()
 
-        # nt.show_buttons(filter_=['physics'])
+    # 可以自定义图的物理属性的展示图
+    def phy_changeable_show_graph(self):
+        """展示可以自定义物理属性的图，侧边栏可以自定义physics属性"""
+        self.init_show_graph()
+        # 显示物理栏
+        self.show_physics_menu()
+        self.graph_view.show()
+
+    # 可以自定义图的节点属性的展示图
+    def node_changeable_show_graph(self):
+        """展示可以自定义节点属性的图，侧边栏可以自定义nodes属性"""
+        self.init_show_graph()
+        # 显示节点栏
+        self.show_nodes_menu()
+        self.graph_view.show()
+
+    # 可以自定义边的属性的展示图
+    def edge_changeable_show_graph(self):
+        """展示可以自定义边属性的图，侧边栏可以自定义edges属性"""
+        self.init_show_graph()
+        # 显示边栏
+        self.show_edges_menu()
+        self.graph_view.show()
+
+    # 展示顶部过滤搜索框
+    def show_filter_menu(self):
+        """展示顶部过滤搜索框，图的一个子功能"""
+        self.nt.filter_menu = True
+        self.change_graph_html()
+
+    # 展示侧边物理搜索框
+    def show_physics_menu(self):
+        """展示侧边physics修改栏，图的一个子功能"""
+        # 更改network宽度使得能让侧边栏显示在右侧
+        # TODO:需要调整
+        self.nt.width = '80%'
+        self.nt.show_buttons(filter_=['physics'])
+        self.change_graph_html()
+
+    # 展示侧边node自定义框
+    def show_nodes_menu(self):
+        """展示侧边nodes修改栏，图的一个子功能"""
+        # 更改network宽度使得能让侧边栏显示在右侧
+        self.nt.width = '80%'
+        self.nt.show_buttons(filter_=['nodes'])
+        self.change_graph_html()
+
+    # 展示侧边edge自定义框
+    def show_edges_menu(self):
+        """展示侧边edges修改栏，图的一个子功能"""
+        # 更改network宽度使得能让侧边栏显示在右侧
+        self.nt.width = '80%'
+        self.nt.show_buttons(filter_=['edges'])
+        self.change_graph_html()
 
     def get_network_info(self):
         # TODO: 在此处编写获取该用户网络信息的代码

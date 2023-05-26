@@ -7,3 +7,5 @@ qt-material~=2.14
 wireguard-tools~=0.4.1
 psycopg~=3.1.9
 Flask~=2.3.2
+networkx~=3.1
+pyvis~=0.3.2
