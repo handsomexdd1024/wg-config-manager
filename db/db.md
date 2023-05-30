@@ -65,7 +65,7 @@ list[IPv4Address | IPv4Network | IPv6Address | IPv6Network | None]
 - address_list:(实现list与string之间转换）
 - network_uuid: UUID
 - 
-# `四、massage.database`
+# `四、massage.database`（取消）
 ## 1.schema StandardResponse:
 ### (1)table StandardResponse_self
 - code: int
