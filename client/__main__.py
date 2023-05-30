@@ -155,16 +155,25 @@ class MainWindow(QWidget):
         # 创建一个右侧的分割窗口用于上下分割
         self.right_splitter = QSplitter(Qt.Vertical, self.main_splitter)
 
+        # 创建一个右上方splitter
+        self.right_top_splitter = QSplitter(Qt.Vertical, self.right_splitter)
+        self.right_top_splitter.setHandleWidth(1)
+        # 创建一个右侧上方的窗口用于存放选项
+        self.right_top_widget = QWidget(self.right_top_splitter)
+        self.right_top_layout = QHBoxLayout(self.right_top_widget)
+        self.right_top_widget.setStyleSheet('background-color: #3c3f41')
+
         # 创建右侧上方的主窗口
         self.top_widget = QWidget(self.right_splitter)
+        self.top_layout = QHBoxLayout(self.top_widget)
         self.top_widget.setStyleSheet('background-color: #3c3f41')
-        self.top_layout = QVBoxLayout(self.top_widget)
 
         # 将生成的图加载到top_widget中
         self.graph_view = QWebEngineView(self.top_widget)
-
         # 设置graph_view占满整个top_widget
         self.top_layout.addWidget(self.graph_view)
+        self.top_layout.setContentsMargins(0, 0, 0, 0)
+        self.top_layout.setSpacing(0)
 
         # 底部创建一个水平分割栏，用于设置三个按钮，分别为更新、添加、删除
         self.bottom_splitter = QSplitter(Qt.Horizontal, self.right_splitter)
@@ -179,10 +188,10 @@ class MainWindow(QWidget):
         self.right_splitter.setStretchFactor(1, 1)
         self.main_splitter.setStretchFactor(1, 1)
 
-        # 设置左右splitter初始宽度比例1：3
+        # 设置splitter初始宽度比例
         self.right_splitter.setSizes([3, 1])
         self.main_splitter.setSizes([self.width() // 4, self.width() * 3 // 4])
-        self.right_splitter.setSizes([self.width() * 3 // 4, self.width() // 4])
+        self.right_splitter.setSizes([self.width() * 1 // 10, self.width() * 7 // 10, self.width() * 1 // 5])
         self.bottom_splitter.setSizes([self.width() * 3 // 4, self.width() // 4])
 
         # 设置边框宽度
@@ -198,6 +207,41 @@ class MainWindow(QWidget):
         # 按钮区域使用垂直布局
         self.bottom_button_layout = QVBoxLayout(self.bottom_button_widget)
         self.bottom_button_layout.addStretch()
+
+        # 创建右上方filter按钮
+        self.filter_button = QPushButton("Filter Mode", self.right_top_widget)
+        self.right_top_layout.addWidget(self.filter_button, alignment=Qt.AlignCenter)
+        self.filter_button.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"; height: '
+                                         '30px; width: 140px')
+        self.filter_button.clicked.connect(self.show_filter_menu)
+
+        # 创建右上方select按钮
+        self.select_button = QPushButton("Select Mode", self.right_top_widget)
+        self.right_top_layout.addWidget(self.select_button, alignment=Qt.AlignCenter)
+        self.select_button.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"; height: '
+                                         '30px; width: 140px')
+        self.select_button.clicked.connect(self.show_select_menu)
+
+        # 创建右上方physics按钮
+        self.physics_button = QPushButton("Physics Settings", self.right_top_widget)
+        self.right_top_layout.addWidget(self.physics_button, alignment=Qt.AlignCenter)
+        self.physics_button.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"; height: '
+                                          '30px; width: 190px')
+        self.physics_button.clicked.connect(self.show_physics_menu)
+
+        # 创建右上方Nodes UI按钮
+        self.nodes_ui_button = QPushButton("Nodes UI", self.right_top_widget)
+        self.right_top_layout.addWidget(self.nodes_ui_button, alignment=Qt.AlignCenter)
+        self.nodes_ui_button.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"; height: '
+                                           '30px; width: 140px')
+        self.nodes_ui_button.clicked.connect(self.show_nodes_menu)
+
+        # 创建右上方Edges UI按钮
+        self.edges_ui_button = QPushButton("Edges UI", self.right_top_widget)
+        self.right_top_layout.addWidget(self.edges_ui_button, alignment=Qt.AlignCenter)
+        self.edges_ui_button.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"; height: '
+                                           '30px; width: 140px')
+        self.edges_ui_button.clicked.connect(self.show_edges_menu)
 
         # 创建底部create按钮,用于新增node
         self.create_node_button = QPushButton("New node", self.bottom_button_widget)
@@ -246,15 +290,16 @@ class MainWindow(QWidget):
         self.update_node_button.setStyleSheet('border-radius: 10px')
         self.delete_node_button.setStyleSheet('border-radius: 10px')
         self.create_link_button.setStyleSheet('border-radius: 10px')
-        self.logout_button.setStyleSheet('border-radius: 10px; color:#c75450')
+        self.logout_button.setStyleSheet('border-radius: 10px; color:#c75450;border:2px solid #c75450')
 
         self.init_network()
         self.simple_show_graph()
-        self.show_filter_menu()
+        self.change_graph_html()
+        # self.show_filter_menu()
 
     def init_network(self):
         # 创建一个network
-        self.nt = Network(height="750px", width="100%", bgcolor="#222222", font_color="white", filter_menu=True)
+        self.nt = Network(height="1160px", width="100%", bgcolor="#222222", font_color="white", filter_menu=False)
         nx_graph = nx.cycle_graph(10)
         nx_graph.add_node(1, size=20, label='Jayson', title='Jayson', group=1)
         nx_graph.add_node(2, size=25, label='Billy', title='Billy', group=1)
@@ -272,7 +317,7 @@ class MainWindow(QWidget):
         # 将pyvis的network转换为networkx的graph
         self.nt.from_nx(nx_graph)
 
-    # 保存对图展示模式的修改
+        # 保存对图展示模式的修改
     def change_graph_html(self):
         self.nt.write_html("nx.html", open_browser=False)
 
@@ -311,28 +356,40 @@ class MainWindow(QWidget):
         self.show_edges_menu()
         self.graph_view.show()
 
-    # 展示顶部过滤搜索框
+    # 展示顶部filter搜索框
     def show_filter_menu(self):
         """展示顶部过滤搜索框，图的一个子功能"""
         self.nt.filter_menu = True
         self.change_graph_html()
+        self.graph_view.reload()
+
+    # 展示顶部select搜索框
+    def show_select_menu(self):
+        """展示顶部select搜索框，图的一个子功能"""
+        self.nt.select_menu = True
+        self.change_graph_html()
+        self.graph_view.reload()
 
     # 展示侧边物理搜索框
     def show_physics_menu(self):
         """展示侧边physics修改栏，图的一个子功能"""
         # 更改network宽度使得能让侧边栏显示在右侧
         # TODO:需要调整
-        self.nt.width = '80%'
+        self.nt.width = '400px'
         self.nt.show_buttons(filter_=['physics'])
         self.change_graph_html()
+        self.graph_view.reload()
 
     # 展示侧边node自定义框
     def show_nodes_menu(self):
         """展示侧边nodes修改栏，图的一个子功能"""
         # 更改network宽度使得能让侧边栏显示在右侧
-        self.nt.width = '80%'
+        self.nt.width = '20%'
+        # 设置网nt的布局为水平
+        self.nt.barnes_hut()
         self.nt.show_buttons(filter_=['nodes'])
         self.change_graph_html()
+        self.graph_view.reload()
 
     # 展示侧边edge自定义框
     def show_edges_menu(self):
@@ -341,6 +398,7 @@ class MainWindow(QWidget):
         self.nt.width = '80%'
         self.nt.show_buttons(filter_=['edges'])
         self.change_graph_html()
+        self.graph_view.reload()
 
     def get_network_info(self):
         # TODO: 在此处编写获取该用户网络信息的代码
@@ -453,7 +511,7 @@ class ForgetPasswordWindow(ChildDialogUi):
 
         sign_up_label = self.label
         sign_up_label.setStyleSheet('font-size: 30px; font-weight: bold; color: white')
-        passwd_recovery_layout.addWidget(sign_up_label, 0, 0, 1, 0, Qt.AlignCenter)
+        passwd_recovery_layout.addWidget(sign_up_label, 0, 0, 1, 0)
         self.user_label = QLabel('账号/用户名:', self)
         # 将控件添加到布局中
         passwd_recovery_layout.addWidget(self.user_label, 1, 2, 1, 1)
