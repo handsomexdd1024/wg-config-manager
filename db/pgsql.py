@@ -1,6 +1,5 @@
 import psycopg2
 from psycopg2.extras import Json
-
 # 连接到数据库
 conn = psycopg2.connect(
     host="localhost",
@@ -110,7 +109,7 @@ def create_schema_and_tables():
 # 插入数据示例
 def insert_data():
     try:
-        identifier = "e6b021d1-9b0a-4a9b-a684-6d70b9f4a7c9"  # 示例 identifier
+        identifier = "e6b021d1-2b0a-5a9b-a684-6d70b0f4a7c8"  # 示例 identifier
         name = "John"  # 示例 name
         address_list = ["192.168.0.1", "192.168.0.2"]  # 示例 address_list
 
@@ -130,6 +129,15 @@ def insert_data():
     except (Exception, psycopg2.Error) as error:
         print("Error inserting data:", error)
 
+# 创建数据库、模式和表格
+create_schema_and_tables()
+
+# 插入数据示例
+insert_data()
+
+# 获取数据示例
+import json
+
 # 获取数据示例
 def retrieve_data():
     try:
@@ -141,22 +149,20 @@ def retrieve_data():
             name = row[1]
             address_list_json = row[2]
 
-            # 转换数据格式
-            address_list = address_list_json['{']  # 示例转换方式，请根据实际存储方式进行调整
+            try:
+                # 解析数据格式
+                address_list = json.loads(address_list_json)  # 解析为字典对象
 
-            # 打印数据
-            print("Identifier:", identifier)
-            print("Name:", name)
-            print("Address List:", address_list)
+                # 打印数据
+                print("Identifier:", identifier)
+                print("Name:", name)
+                print("Address List:", address_list)
+
+            except json.JSONDecodeError as e:
+                print(f"Error parsing JSON data for identifier {identifier}: {e}")
 
     except (Exception, psycopg2.Error) as error:
         print("Error retrieving data:", error)
-
-# 创建数据库、模式和表格
-create_schema_and_tables()
-
-# 插入数据示例
-insert_data()
 
 # 获取数据示例
 retrieve_data()
