@@ -4,10 +4,10 @@ from psycopg2.extras import Json
 # 连接到数据库
 conn = psycopg2.connect(
     host="localhost",
-    port="5432",
-    database="homework",
+    port="7777",
+    database="postgres",
     user="postgres",
-    password="123456"
+    password="hxy20030620"
 )
 cur = conn.cursor()
 # 创建 schema 和 table
