@@ -10,7 +10,6 @@ conn = psycopg2.connect(
     password="123456"
 )
 cur = conn.cursor()
-
 # 创建 schema 和 table
 def create_schema_and_tables():
     try:
