@@ -1,172 +1,201 @@
 import psycopg2
-from psycopg2.extras import Json
+import psycopg2.extras
+import uuid
+from enum import Enum
+
+# 枚举类型定义
+class NodeType(Enum):
+    PEER = 0
+    ROUTER = 1
+    ROUTED = 2
+
+class EndpointType(Enum):
+    IPV4 = 0
+    IPV6 = 1
+    DOMAIN = 2
+
 # 连接到数据库
 conn = psycopg2.connect(
-    host="localhost",
-    port="7777",
-    database="postgres",
-    user="postgres",
-    password="hxy20030620"
+host="localhost",
+port="7777",
+database="postgres",
+user="postgres",
+password="hxy20030620"
 )
 cur = conn.cursor()
 
-# 创建 schema 和 table
-def create_schema_and_tables():
-    try:
-        # 创建 schema WireguardNode
-        cur.execute("""
-            CREATE SCHEMA IF NOT EXISTS wireguard
-        """)
+# 创建表格和类型转换
 
-        # 创建 table NodeType
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS wireguard.NodeType (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(255)
-            )
-        """)
+# NodeType和EndpointType转换函数
+def convert_node_type(node_type):
+    return node_type.value
 
-        # 创建 table EndpointType
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS wireguard.EndpointType (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(255)
-            )
-        """)
+def convert_endpoint_type(endpoint_type):
+    return endpoint_type.value
 
-        # 创建 table self
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS wireguard.self (
-                identifier UUID PRIMARY KEY,
-                owner UUID,
-                name VARCHAR(255),
-                address_list JSONB,
-                admin_approval BOOLEAN,
-                node_type VARCHAR(255),
-                private_key TEXT,
-                public_key TEXT,
-                endpoint TEXT
-            )
-        """)
+def convert_node_type_back(node_type_value):
+    return NodeType(node_type_value)
 
-        # 创建 schema WireguardObject
-        cur.execute("""
-            CREATE SCHEMA IF NOT EXISTS wireguardobject
-        """)
+def convert_endpoint_type_back(endpoint_type_value):
+    return EndpointType(endpoint_type_value)
 
-        # 创建 table ObjectType
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS wireguardobject.ObjectType (
-                id SERIAL PRIMARY KEY,
-                name VARCHAR(255)
-            )
-        """)
+# UUID和字符串转换函数
+def convert_uuid_to_str(uuid_obj):
+    return str(uuid_obj)
 
-        # 创建 table self
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS wireguardobject.self (
-                identifier UUID PRIMARY KEY,
-                object_type INTEGER
-            )
-        """)
+def convert_str_to_uuid(uuid_str):
+    return uuid.UUID(uuid_str)
 
-        # 创建 schema WireguardConnection
-        cur.execute("""
-            CREATE SCHEMA IF NOT EXISTS wireguardconnection
-        """)
+# 列表和字符串转换函数
+def convert_list_to_str(lst):
+    return ','.join(lst)
 
-        # 创建 table self
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS wireguardconnection.self (
-                identifier TEXT PRIMARY KEY,
-                peers TEXT,
-                preshared_key TEXT
-            )
-        """)
+def convert_str_to_list(lst_str):
+    return lst_str.split(',')
 
-        # 创建 schema WireguardNetwork
-        cur.execute("""
-            CREATE SCHEMA IF NOT EXISTS wireguardnetwork
-        """)
+# 注册类型转换函数
+psycopg2.extras.register_uuid()
+psycopg2.extensions.register_adapter(NodeType, convert_node_type)
+psycopg2.extensions.register_adapter(EndpointType, convert_endpoint_type)
+psycopg2.extensions.register_adapter(uuid.UUID, convert_uuid_to_str)
+psycopg2.extensions.register_adapter(list, convert_list_to_str)
 
-        # 创建 table self
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS wireguardnetwork.self (
-                identifier TEXT PRIMARY KEY,
-                name VARCHAR(255),
-                node_uuid_list TEXT,
-                connection_uuid_list TEXT
-            )
-        """)
+# 逆向类型转换函数
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
+psycopg2.extensions.register_adapter(int, convert_node_type_back)
+psycopg2.extensions.register_adapter(int, convert_endpoint_type_back)
+psycopg2.extensions.register_adapter(str, convert_str_to_uuid)
+psycopg2.extensions.register_adapter(str, convert_str_to_list)
 
-        # 提交事务
-        conn.commit()
+psycopg2.extras.register_uuid()
 
-        print("Schema and tables created successfully!")
-    except (Exception, psycopg2.Error) as error:
-        print("Error creating schema and tables:", error)
+# 创建表格
+cur.execute("""
+    CREATE TABLE NodeType (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE EndpointType (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE ObjectType (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE WireguardNode (
+        identifier UUID PRIMARY KEY,
+        owner UUID NOT NULL,
+        name VARCHAR(50),
+        oaddress_list VARCHAR,
+        admin_approval BOOLEAN,
+        node_type INTEGER REFERENCES NodeType(id),
+        private_key VARCHAR,
+        public_key VARCHAR,
+        endpoint INTEGER REFERENCES EndpointType(id)
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE WireguardObject (
+        identifier UUID PRIMARY KEY,
+        object_type INTEGER REFERENCES ObjectType(id)
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE WireguardConnection (
+        identifier UUID PRIMARY KEY,
+        opeers VARCHAR,
+        preshared_key VARCHAR
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE WireguardNetwork (
+        identifier UUID PRIMARY KEY,
+        name VARCHAR(50),
+        node_uuid_list VARCHAR,
+        connection_uuid_list VARCHAR
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE user_self (
+        identifier UUID PRIMARY KEY,
+        name VARCHAR(50),
+        hashed_password VARCHAR,
+        salt VARCHAR
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE WireguardConfig (
+        identifier UUID PRIMARY KEY,
+        owner UUID,
+        name VARCHAR(50),
+        address_list VARCHAR,
+        network_uuid UUID REFERENCES WireguardNetwork(identifier)
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE StandardResponse (
+        code INTEGER,
+        message VARCHAR,
+        content VARCHAR
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE NetworkModification_Action (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(50) NOT NULL
+    )
+""")
+
+cur.execute("""
+    CREATE TABLE NetworkModification (
+        action INTEGER REFERENCES NetworkModification_Action(id),
+        content VARCHAR
+    )
+""")
 
 # 插入数据示例
-def insert_data():
-    try:
-        identifier = "e6b021d1-2b0a-5a9b-a684-6d70b0f4a7c8"  # 示例 identifier
-        name = "John"  # 示例 name
-        address_list = ["192.168.0.1", "192.168.0.2"]  # 示例 address_list
+cur.execute("""
+    INSERT INTO NodeType (name) VALUES ('PEER')
+""")
 
-        # 转换数据格式
-        address_list_json = Json(address_list)
+# 查询数据示例
+cur.execute("""
+    SELECT * FROM NodeType
+""")
+rows = cur.fetchall()
+for row in rows:
+    print(row)
 
-        # 插入数据
-        cur.execute("""
-            INSERT INTO wireguard.self (identifier, name, address_list)
-            VALUES (%s, %s, %s)
-        """, (identifier, name, address_list_json))
+# 更新数据示例
+cur.execute("""
+    UPDATE NodeType SET name = 'NEW_NAME' WHERE id = 1
+""")
 
-        # 提交事务
-        conn.commit()
+# 删除数据示例
+cur.execute("""
+    DELETE FROM NodeType WHERE id = 1
+""")
 
-        print("Data inserted successfully!")
-    except (Exception, psycopg2.Error) as error:
-        print("Error inserting data:", error)
 
-# 创建数据库、模式和表格
-create_schema_and_tables()
-
-# 插入数据示例
-insert_data()
-
-# 获取数据示例
-import json
-
-# 获取数据示例
-def retrieve_data():
-    try:
-        cur.execute("SELECT * FROM wireguard.self")
-        rows = cur.fetchall()
-
-        for row in rows:
-            identifier = row[0]
-            name = row[1]
-            address_list_json = row[2]
-
-            try:
-                # 解析数据格式
-                address_list = json.loads(address_list_json)  # 解析为字典对象
-
-                # 打印数据
-                print("Identifier:", identifier)
-                print("Name:", name)
-                print("Address List:", address_list)
-
-            except json.JSONDecodeError as e:
-                print(f"Error parsing JSON data for identifier {identifier}: {e}")
-
-    except (Exception, psycopg2.Error) as error:
-        print("Error retrieving data:", error)
-
-# 获取数据示例
-retrieve_data()
-
-# 关闭连接
+# 提交更改并关闭连接
+conn.commit()
 cur.close()
 conn.close()
