@@ -7,7 +7,24 @@ from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QLineEdit, QPushButto
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from qt_material import apply_stylesheet
 from pyvis.network import Network
+import client.network as network
+import core.user as user
 import networkx as nx
+
+
+class Session:
+    def __init__(self):
+        self.user = None
+        self.config_server = None
+
+    def get_user_config(self):
+        self.config_server.get_config(self.user.uuid)
+
+    def init_config_server(self):
+        self.config_server = network.ConfigServer()
+
+
+session = Session()
 
 
 # 创建应用程序对象
@@ -102,20 +119,22 @@ class LoginWindow(QWidget):
         self.bg_pic.setMovie(movie)
         movie.start()
 
-    def login(self):
+    def login(self) -> [bool, str, user.User]:
         username = self.user_edit.text()
         password = self.passwd_edit.text()
-
+        # 结束这个窗口
         # TODO: 在此处编写验证登录信息的代码
+        # auth_response = config_server.user_auth_request(username, password)
+        # if not auth_response[0]:
+        #     print(auth_response[1])
+        #     return
+        # else:
+        #     session.user = config_server.get_user_profile(auth_response[1])
+        #     config_server.get_user_config(session.user.uuid)
+        #     print('登录成功')
 
-        # 登陆成功后跳转到主界面
-        self.hide()
-        self.main_window = MainWindow()
-        self.main_window.show()
-        print('账号：', username)
-        print('密码：', password)
-
-    # 主界面
+        # 登陆成功后结束当前窗口，返回一个信息给到主界面
+        self.close()
 
 
 class MainWindow(QWidget):
@@ -145,12 +164,12 @@ class MainWindow(QWidget):
         self.file_layout_with_scroll.setSpacing(0)
 
         # 使用滚动区域包装文件栏部件
-        self.file_scroll_area = QScrollArea()
-        self.file_scroll_area.setWidgetResizable(True)
-        self.file_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.file_scroll_area.setWidget(self.file_widget)
-
-        self.main_splitter.addWidget(self.file_scroll_area)
+        # self.file_scroll_area = QScrollArea()
+        # self.file_scroll_area.setWidgetResizable(True)
+        # self.file_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        # self.file_scroll_area.setWidget(self.file_widget)
+        #
+        # self.main_splitter.addWidget(self.file_scroll_area)
 
         # 创建一个右侧的分割窗口用于上下分割
         self.right_splitter = QSplitter(Qt.Vertical, self.main_splitter)
@@ -198,9 +217,26 @@ class MainWindow(QWidget):
         self.right_splitter.setHandleWidth(5)
 
         # 创建file区底部按钮,用于新建配置文件
-        self.file_button = QPushButton("New config", self.file_widget)
+        self.conf_button1 = QPushButton("config1", self.file_widget)
+        self.conf_button1.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
+        self.conf_button1.setFixedSize(350 , 60)
+        self.file_layout.addWidget(self.conf_button1, alignment=Qt.AlignCenter)
+
+        self.conf_button2 = QPushButton("config1", self.file_widget)
+        self.conf_button2.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
+        self.conf_button2.setFixedSize(350 , 60)
+        self.file_layout.addWidget(self.conf_button2, alignment=Qt.AlignCenter)
+
+        self.conf_button3 = QPushButton("config1", self.file_widget)
+        self.conf_button3.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
+        self.conf_button3.setFixedSize(350 , 60)
+        self.file_layout.addWidget(self.conf_button3, alignment=Qt.AlignCenter)
+
         self.file_layout.addStretch()
+
+        self.file_button = QPushButton("New config", self.file_widget)
         self.file_layout.addWidget(self.file_button, alignment=Qt.AlignCenter)
+        self.file_button.setFixedSize(200, 50)
         self.file_button.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
         self.file_button.clicked.connect(self.new_config)
 
@@ -243,6 +279,13 @@ class MainWindow(QWidget):
                                            '30px; width: 140px')
         self.edges_ui_button.clicked.connect(self.show_edges_menu)
 
+        # 创建刷新refresh按钮
+        self.refresh_button = QPushButton("Refresh", self.right_top_widget)
+        self.right_top_layout.addWidget(self.refresh_button, alignment=Qt.AlignCenter)
+        self.refresh_button.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"; height: '
+                                          '30px; width: 140px')
+        self.refresh_button.clicked.connect(self.refresh)
+
         # 创建底部create按钮,用于新增node
         self.create_node_button = QPushButton("New node", self.bottom_button_widget)
         self.bottom_button_layout.addWidget(self.create_node_button, alignment=Qt.AlignCenter)
@@ -267,6 +310,12 @@ class MainWindow(QWidget):
         self.create_link_button.setStyleSheet('color: white; font-size: 25px; font-family: "Microsoft YaHei"')
         self.create_link_button.clicked.connect(self.create_link)
 
+        # 创建底部generate config按钮,用于导入导出
+        self.gen_conf_button = QPushButton("Generate conf", self.bottom_button_widget)
+        self.bottom_button_layout.addWidget(self.gen_conf_button, alignment=Qt.AlignCenter)
+        self.gen_conf_button.setStyleSheet('color: white; font-size: 25px; font-family: "Microsoft YaHei"')
+        self.gen_conf_button.clicked.connect(self.generate_config)
+
         # 创建底部logout按钮,用于登出（红色）
         self.logout_button = QPushButton("Logout", self.bottom_button_widget)
         self.bottom_button_layout.addWidget(self.logout_button, alignment=Qt.AlignCenter)
@@ -274,24 +323,20 @@ class MainWindow(QWidget):
         self.logout_button.clicked.connect(self.logout)
 
         # 将所有按钮统一设置为圆角，且宽度相同
-        self.file_button.setFixedWidth(220)
-        self.create_node_button.setFixedWidth(220)
-        self.update_node_button.setFixedWidth(220)
-        self.delete_node_button.setFixedWidth(220)
-        self.create_link_button.setFixedWidth(220)
-        self.logout_button.setFixedWidth(220)
-        self.file_button.setFixedHeight(50)
-        self.create_node_button.setFixedHeight(50)
-        self.update_node_button.setFixedHeight(50)
-        self.delete_node_button.setFixedHeight(50)
-        self.create_link_button.setFixedHeight(50)
-        self.logout_button.setFixedHeight(50)
+        self.gen_conf_button.setFixedSize(220, 50)
+        self.create_node_button.setFixedSize(220, 50)
+        self.update_node_button.setFixedSize(220, 50)
+        self.delete_node_button.setFixedSize(220, 50)
+        self.create_link_button.setFixedSize(220, 50)
+        self.logout_button.setFixedSize(220, 50)
         self.create_node_button.setStyleSheet('border-radius: 10px')
         self.update_node_button.setStyleSheet('border-radius: 10px')
         self.delete_node_button.setStyleSheet('border-radius: 10px')
         self.create_link_button.setStyleSheet('border-radius: 10px')
+        self.gen_conf_button.setStyleSheet('border-radius: 10px')
         self.logout_button.setStyleSheet('border-radius: 10px; color:#c75450;border:2px solid #c75450')
 
+        self.show_config()
         self.init_network()
         self.simple_show_graph()
         self.change_graph_html()
@@ -317,7 +362,14 @@ class MainWindow(QWidget):
         # 将pyvis的network转换为networkx的graph
         self.nt.from_nx(nx_graph)
 
-        # 保存对图展示模式的修改
+    # 把配置文件以可点击的方式展示在左侧file栏
+    def show_config(self):
+        self.conf_button1 = QPushButton("config1", self.file_widget)
+        self.conf_button1.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
+        self.conf_button1.setFixedSize(300 , 60)
+        self.file_layout.addWidget(self.conf_button1, alignment=Qt.AlignLeft)
+
+    # 保存对图展示模式的修改
     def change_graph_html(self):
         self.nt.write_html("nx.html", open_browser=False)
 
@@ -375,7 +427,7 @@ class MainWindow(QWidget):
         """展示侧边physics修改栏，图的一个子功能"""
         # 更改network宽度使得能让侧边栏显示在右侧
         # TODO:需要调整
-        self.nt.width = '400px'
+        self.nt.height = '500px'
         self.nt.show_buttons(filter_=['physics'])
         self.change_graph_html()
         self.graph_view.reload()
@@ -384,9 +436,8 @@ class MainWindow(QWidget):
     def show_nodes_menu(self):
         """展示侧边nodes修改栏，图的一个子功能"""
         # 更改network宽度使得能让侧边栏显示在右侧
-        self.nt.width = '20%'
+        self.nt.height = '500px'
         # 设置网nt的布局为水平
-        self.nt.barnes_hut()
         self.nt.show_buttons(filter_=['nodes'])
         self.change_graph_html()
         self.graph_view.reload()
@@ -395,8 +446,17 @@ class MainWindow(QWidget):
     def show_edges_menu(self):
         """展示侧边edges修改栏，图的一个子功能"""
         # 更改network宽度使得能让侧边栏显示在右侧
-        self.nt.width = '80%'
+        self.nt.height = '500px'
         self.nt.show_buttons(filter_=['edges'])
+        self.change_graph_html()
+        self.graph_view.reload()
+
+    def refresh(self):
+        # 恢复原始的network
+        self.nt.height = '1160px'
+        # 隐藏所有的侧边栏
+        self.nt.show_buttons(filter_=[' '])
+        self.nt.filter_menu = False
         self.change_graph_html()
         self.graph_view.reload()
 
@@ -442,6 +502,7 @@ class MainWindow(QWidget):
 
     def logout(self):
         # TODO: 在此处编写登出的代码
+        # logout_response = config_server.user_logout_request(session.user.uuid)
         pass
 
 
@@ -541,4 +602,9 @@ if __name__ == '__main__':
     apply_stylesheet(app, theme='dark_teal.xml', invert_secondary=True, extra=extra)
     window.show()
 
-    sys.exit(app.exec_())
+    if app.exec_() == 0:
+        app2 = QApplication(sys.argv)
+        window2 = MainWindow()
+        apply_stylesheet(app2, theme='dark_teal.xml', invert_secondary=True, extra=extra)
+        window2.show()
+        sys.exit(app2.exec_())
