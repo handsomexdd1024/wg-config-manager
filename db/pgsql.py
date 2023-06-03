@@ -95,7 +95,6 @@ psycopg2.extensions.register_adapter(str, convert_str_to_list)
 psycopg2.extras.register_uuid()
 
 # 创建表格
-
 cur.execute("""
     CREATE TABLE IF NOT EXISTS NodeType (
         id SERIAL PRIMARY KEY,
