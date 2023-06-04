@@ -4,16 +4,19 @@ import uuid
 import pickle
 from enum import Enum
 
+
 # 枚举类型定义
 class NodeType(Enum):
     PEER = 0
     ROUTER = 1
     ROUTED = 2
 
+
 class EndpointType(Enum):
     IPV4 = 0
     IPV6 = 1
     DOMAIN = 2
+
 
 # 连接到数据库hxy
 conn = psycopg2.connect(
@@ -26,53 +29,59 @@ conn = psycopg2.connect(
 
 cur = conn.cursor()
 
+
 # NodeType和EndpointType转换函数
 def convert_node_type(node_type):
     return node_type.value
 
+
 def convert_endpoint_type(endpoint_type):
     return endpoint_type.value
+
 
 def convert_node_type_back(node_type_value):
     return NodeType(node_type_value)
 
+
 def convert_endpoint_type_back(endpoint_type_value):
     return EndpointType(endpoint_type_value)
+
 
 # UUID和字符串转换函数
 def convert_uuid_to_str(uuid_obj):
     return str(uuid_obj)
 
+
 def convert_str_to_uuid(uuid_str):
     return uuid.UUID(uuid_str)
+
 
 # 列表和字符串转换函数
 def convert_list_to_str(lst):
     return ','.join(lst)
 
+
 def convert_str_to_list(lst_str):
     return lst_str.split(',')
+
 
 # PEER（Python的序列化格式）和字符串之间的转换
 def convert_peer_to_str(peer):
     return pickle.dumps(peer)
 
+
 def convert_str_to_peer(peer_str):
     return pickle.loads(peer_str)
 
-# UUID和字符串之间的转换
-def convert_uuid_to_str(uuid_obj):
-    return str(uuid_obj)
-
-def convert_str_to_uuid(uuid_str):
-    return uuid.UUID(uuid_str)
 
 # 字节串（bytes）和字符串之间的转换
 def convert_bytes_to_str(bytes_obj):
     return bytes_obj.decode('utf-8')
 
+
 def convert_str_to_bytes(str_obj):
     return str_obj.encode('utf-8')
+
 
 # 注册类型转换函数
 psycopg2.extensions.register_adapter(NodeType, lambda x: x.value)
