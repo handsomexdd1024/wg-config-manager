@@ -15,17 +15,6 @@ class EndpointType(Enum):
     IPV6 = 1
     DOMAIN = 2
 
-# 连接到数据库hxy
-conn = psycopg2.connect(
-    host="localhost",
-    port="7777",
-    database="postgres",
-    user="postgres",
-    password="hxy20030620"
-)
-
-cur = conn.cursor()
-
 # NodeType和EndpointType转换函数
 def convert_node_type(node_type):
     return node_type.value
@@ -94,128 +83,174 @@ psycopg2.extensions.register_adapter(str, convert_str_to_list)
 
 psycopg2.extras.register_uuid()
 
-# 创建表格
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS NodeType (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(50) NOT NULL
-    )
-""")
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS ObjectType (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(50) NOT NULL
-    )
-""")
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS EndpointType (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(50) NOT NULL
-    )
-""")
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS WireguardNode (
-        identifier UUID PRIMARY KEY,
-        owner UUID NOT NULL,
-        name VARCHAR(50),
-        address_list VARCHAR,
-        admin_approval BOOLEAN,
-        node_type INTEGER REFERENCES NodeType(id),
-        private_key VARCHAR,
-        public_key VARCHAR,
-        endpoint INTEGER REFERENCES EndpointType(id)
-    )
-""")
+# 连接到数据库
+def connect_to_database():
+    try:
+        conn = psycopg2.connect(
+            host="localhost",
+            port="7777",
+            database="postgres",
+            user="postgres",
+            password="hxy20030620"
+        )
+        return conn
+    except (Exception, psycopg2.Error) as error:
+        print("Error while connecting to the database:", error)
 
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS WireguardObject (
-        identifier UUID PRIMARY KEY,
-        object_type INTEGER REFERENCES ObjectType(id)
-    )
-""")
+# 初始化数据库、创建表格和插入数据
+def initialize_database():
+    conn = connect_to_database()
+    if conn is None:
+        return
 
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS WireguardConnection (
-        identifier UUID PRIMARY KEY,
-        peers VARCHAR,
-        preshared_key VARCHAR
-    )
-""")
+    try:
+        cur = conn.cursor()
 
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS WireguardNetwork (
-        identifier UUID PRIMARY KEY,
-        name VARCHAR(50),
-        node_uuid_list VARCHAR,
-        connection_uuid_list VARCHAR
-    )
-""")
+        # 创建表格
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS NodeType (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) NOT NULL
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS ObjectType (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) NOT NULL
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS EndpointType (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) NOT NULL
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS WireguardNode (
+                identifier UUID PRIMARY KEY,
+                owner UUID NOT NULL,
+                name VARCHAR(50),
+                address_list VARCHAR,
+                admin_approval BOOLEAN,
+                node_type INTEGER REFERENCES NodeType(id),
+                private_key VARCHAR,
+                public_key VARCHAR,
+                endpoint INTEGER REFERENCES EndpointType(id)
+            )
+        """)
 
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS user_self (
-        identifier UUID PRIMARY KEY,
-        name VARCHAR(50),
-        hashed_password VARCHAR,
-        salt VARCHAR
-    )
-""")
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS WireguardObject (
+                identifier UUID PRIMARY KEY,
+                object_type INTEGER REFERENCES ObjectType(id)
+            )
+        """)
 
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS WireguardConfig (
-        identifier UUID PRIMARY KEY,
-        owner UUID,
-        name VARCHAR(50),
-        address_list VARCHAR,
-        network_uuid UUID REFERENCES WireguardNetwork(identifier)
-    )
-""")
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS WireguardConnection (
+                identifier UUID PRIMARY KEY,
+                peers VARCHAR,
+                preshared_key VARCHAR
+            )
+        """)
 
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS StandardResponse (
-        code INTEGER,
-        message VARCHAR,
-        content VARCHAR
-    )
-""")
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS WireguardNetwork (
+                identifier UUID PRIMARY KEY,
+                name VARCHAR(50),
+                node_uuid_list VARCHAR,
+                connection_uuid_list VARCHAR
+            )
+        """)
 
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS NetworkModification_Action (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(50) NOT NULL
-    )
-""")
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user_self (
+                identifier UUID PRIMARY KEY,
+                name VARCHAR(50),
+                hashed_password VARCHAR,
+                salt VARCHAR
+            )
+        """)
 
-cur.execute("""
-    CREATE TABLE IF NOT EXISTS NetworkModification (
-        action INTEGER REFERENCES NetworkModification_Action(id),
-        content VARCHAR
-    )
-""")
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS WireguardConfig (
+                identifier UUID PRIMARY KEY,
+                owner UUID,
+                name VARCHAR(50),
+                address_list VARCHAR,
+                network_uuid UUID REFERENCES WireguardNetwork(identifier)
+            )
+        """)
 
-# 插入数据示例
-cur.execute("""
-    INSERT INTO NodeType (name) VALUES ('PEER')
-""")
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS StandardResponse (
+                code INTEGER,
+                message VARCHAR,
+                content VARCHAR
+            )
+        """)
 
-# 查询数据示例
-cur.execute("""
-    SELECT * FROM NodeType
-""")
-rows = cur.fetchall()
-for row in rows:
-    print(row)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS NetworkModification_Action (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) NOT NULL
+            )
+        """)
 
-# 更新数据示例
-cur.execute("""
-    UPDATE NodeType SET name = 'NEW_NAME' WHERE id = 1
-""")
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS NetworkModification (
+                action INTEGER REFERENCES NetworkModification_Action(id),
+                content VARCHAR
+            )
+        """)
 
-# 删除数据示例
-cur.execute("""
-    DELETE FROM NodeType WHERE id = 1
-""")
+        # 插入数据示例
+        cur.execute("""
+            INSERT INTO NodeType (name) VALUES ('PEER')
+        """)
+        # 更新数据示例
+        cur.execute("""
+            UPDATE NodeType SET name = 'NEW_NAME' WHERE id = 1
+        """)
 
-# 提交更改并关闭连接
-conn.commit()
-cur.close()
-conn.close()
+        # 删除数据示例
+        cur.execute("""
+            DELETE FROM NodeType WHERE id = 1
+        """)
+        conn.commit()
+        print("Database initialization and data insertion successful!")
+    except (Exception, psycopg2.Error) as error:
+        print("Error while initializing database:", error)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+# 读取数据库并输出数据
+def read_from_database():
+    conn = connect_to_database()
+    if conn is None:
+        return
+
+    try:
+        cur = conn.cursor()
+
+        # 查询数据示例
+        cur.execute("""
+            SELECT * FROM NodeType
+        """)
+        rows = cur.fetchall()
+        for row in rows:
+            print(row)
+    except (Exception, psycopg2.Error) as error:
+        print("Error while reading from database:", error)
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+# 调用函数
+initialize_database()
+read_from_database()
