@@ -8,9 +8,12 @@ __all__ = ["WireguardNode", "WireguardObject", "WireguardNetwork", "WireguardCon
 
 from ipaddress import (
     IPv4Address,
-    IPv4Network,
     IPv6Address,
-    IPv6Network
+    IPv4Network,
+    IPv6Network,
+    ip_address,
+    IPv4Interface,
+    IPv6Interface
 )
 import uuid
 from abc import ABC, abstractmethod, ABCMeta
@@ -68,12 +71,13 @@ class WireguardNode(WireguardObject):
             identifier: uuid.UUID,
             owner: uuid.UUID,
             name: str,
-            address_list: list[IPv4Address | IPv4Network | IPv6Address | IPv6Network | None],
+            address_list: list[IPv4Interface | IPv6Interface | None],
             admin_approval: bool = True,
             node_type: NodeType = NodeType.PEER,
             public_key: WireguardKey = None,
             private_key: WireguardKey = None,
             endpoint: (str, int) = None,
+            connection_list: list[uuid.UUID] = None
     ):
         """
         Initialize a WireGuard node.
@@ -90,6 +94,7 @@ class WireguardNode(WireguardObject):
             self.public_key = public_key
             self.private_key = private_key
         self.endpoint = endpoint
+        self.connection_list = connection_list
 
     @staticmethod
     def default_encoder(o):
@@ -109,7 +114,8 @@ class WireguardNode(WireguardObject):
                 "address_list": [str(i) for i in o.address_list],
                 "public_key": o.public_key.keydata if o.public_key is not None else None,
                 "private_key": o.private_key.keydata if o.private_key is not None else None,
-                "endpoint": o.endpoint
+                "endpoint": o.endpoint,
+                "connection_list": [i.bytes for i in o.connection_list]
             }
 
     @staticmethod
@@ -129,7 +135,8 @@ class WireguardNode(WireguardObject):
                 address_list=[i for i in o["address_list"]],
                 public_key=WireguardKey(o["public_key"]) if o["public_key"] is not None else None,
                 private_key=WireguardKey(o["private_key"]) if o["private_key"] is not None else None,
-                endpoint=o["endpoint"]
+                endpoint=o["endpoint"],
+                connection_list=[uuid.UUID(bytes=i) for i in o["connection_list"]]
             )
         else:
             raise ValueError("Not a WireguardNode object.")

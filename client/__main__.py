@@ -15,7 +15,7 @@ import networkx as nx
 class Session:
     def __init__(self):
         self.user = None
-        self.config_server = None
+        self.config_server = ['2021', 'Jayson', '2021', 'userlist', '2021']
 
     def get_user_config(self):
         self.config_server.get_config(self.user.uuid)
@@ -141,6 +141,9 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         # 窗口居中占满半个屏幕
+        self.conf_line = None
+        self.conf_text = None
+        self.text_combined_widget = None
         self.resize(1680, 1150)
         self.move(400, 250)
         # 设置窗口标题
@@ -162,14 +165,6 @@ class MainWindow(QWidget):
         self.file_layout_with_scroll = QVBoxLayout(self.file_widget)
         self.file_layout_with_scroll.setContentsMargins(0, 0, 0, 0)
         self.file_layout_with_scroll.setSpacing(0)
-
-        # 使用滚动区域包装文件栏部件
-        # self.file_scroll_area = QScrollArea()
-        # self.file_scroll_area.setWidgetResizable(True)
-        # self.file_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        # self.file_scroll_area.setWidget(self.file_widget)
-        #
-        # self.main_splitter.addWidget(self.file_scroll_area)
 
         # 创建一个右侧的分割窗口用于上下分割
         self.right_splitter = QSplitter(Qt.Vertical, self.main_splitter)
@@ -202,6 +197,70 @@ class MainWindow(QWidget):
         self.bottom_text_widget.setStyleSheet('background-color: #3c3f41')
         self.bottom_button_widget.setStyleSheet('background-color: #3c3f41')
 
+        # 将bottom_text_widget区域全部变成文本区域
+        self.bottom_text_layout = QVBoxLayout(self.bottom_text_widget)
+        self.bottom_text_layout.setContentsMargins(0, 0, 0, 0)
+        self.bottom_text_layout.setSpacing(0)
+
+        self.bottom_conf_widget = QWidget(self.bottom_text_widget)
+        self.bottom_conf_widget1 = QWidget(self.bottom_text_widget)
+        self.bottom_conf_widget2 = QWidget(self.bottom_text_widget)
+        self.bottom_conf_widget3 = QWidget(self.bottom_text_widget)
+        self.bottom_conf_widget4 = QWidget(self.bottom_text_widget)
+
+        # 全都设置成水平布局
+        self.conf_lay = QHBoxLayout(self.bottom_conf_widget)
+        self.conf_lay1 = QHBoxLayout(self.bottom_conf_widget1)
+        self.conf_lay2 = QHBoxLayout(self.bottom_conf_widget2)
+        self.conf_lay3 = QHBoxLayout(self.bottom_conf_widget3)
+        self.conf_lay4 = QHBoxLayout(self.bottom_conf_widget4)
+
+        self.bottom_text = QLabel(self.bottom_conf_widget)
+        self.bottom_text1 = QLabel(self.bottom_conf_widget1)
+        self.bottom_text2 = QLabel(self.bottom_conf_widget2)
+        self.bottom_text3 = QLabel(self.bottom_conf_widget3)
+        self.bottom_text4 = QLabel(self.bottom_conf_widget4)
+        self.bottom_text.setText('UID  : ')
+        self.bottom_text1.setText('Name : ')
+        self.bottom_text2.setText('Owner :')
+        self.bottom_text3.setText('Users :')
+        self.bottom_text4.setText('NID  : ')
+
+        self.bottom_line = QLineEdit(self.bottom_conf_widget)
+        self.bottom_line1 = QLineEdit(self.bottom_conf_widget1)
+        self.bottom_line2 = QLineEdit(self.bottom_conf_widget2)
+        self.bottom_line3 = QLineEdit(self.bottom_conf_widget3)
+        self.bottom_line4 = QLineEdit(self.bottom_conf_widget4)
+
+        self.conf_lay.addWidget(self.bottom_text)
+        self.conf_lay.addWidget(self.bottom_line)
+        self.conf_lay1.addWidget(self.bottom_text1)
+        self.conf_lay1.addWidget(self.bottom_line1)
+        self.conf_lay2.addWidget(self.bottom_text2)
+        self.conf_lay2.addWidget(self.bottom_line2)
+        self.conf_lay3.addWidget(self.bottom_text3)
+        self.conf_lay3.addWidget(self.bottom_line3)
+        self.conf_lay4.addWidget(self.bottom_text4)
+        self.conf_lay4.addWidget(self.bottom_line4)
+
+        self.bottom_text_layout.addWidget(self.bottom_conf_widget, alignment=Qt.AlignLeft)
+        self.bottom_text_layout.addWidget(self.bottom_conf_widget1, alignment=Qt.AlignLeft)
+        self.bottom_text_layout.addWidget(self.bottom_conf_widget2, alignment=Qt.AlignLeft)
+        self.bottom_text_layout.addWidget(self.bottom_conf_widget3, alignment=Qt.AlignLeft)
+        self.bottom_text_layout.addWidget(self.bottom_conf_widget4, alignment=Qt.AlignLeft)
+
+        # 设置底部edit_line区域样式
+        self.bottom_line.setStyleSheet(
+            'background-color: #222222; color: white; font-size: 20px; font-family: "Microsoft YaHei"；width: 500px')
+        self.bottom_line1.setStyleSheet(
+            'background-color: #222222; color: white; font-size: 20px; font-family: "Microsoft YaHei"; width: 1100px')
+        self.bottom_line2.setStyleSheet(
+            'background-color: #222222; color: white; font-size: 20px; font-family: "Microsoft YaHei"; width: 1100px')
+        self.bottom_line3.setStyleSheet(
+            'background-color: #222222; color: white; font-size: 20px; font-family: "Microsoft YaHei"; width: 1100px')
+        self.bottom_line4.setStyleSheet(
+            'background-color: #222222; color: white; font-size: 20px; font-family: "Microsoft YaHei"; width: 1100px')
+
         # 调整伸缩性，使得右上方的主窗口可以伸缩
         self.right_splitter.setStretchFactor(0, 3)
         self.right_splitter.setStretchFactor(1, 1)
@@ -219,17 +278,21 @@ class MainWindow(QWidget):
         # 创建file区底部按钮,用于新建配置文件
         self.conf_button1 = QPushButton("config1", self.file_widget)
         self.conf_button1.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
-        self.conf_button1.setFixedSize(350 , 60)
+        self.conf_button1.setFixedSize(350, 60)
         self.file_layout.addWidget(self.conf_button1, alignment=Qt.AlignCenter)
+        self.conf_button1.clicked.connect(self.conf_button_clicked)
 
-        self.conf_button2 = QPushButton("config1", self.file_widget)
+        self.conf_button2 = QPushButton("config2", self.file_widget)
         self.conf_button2.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
-        self.conf_button2.setFixedSize(350 , 60)
+        self.conf_button2.setFixedSize(350, 60)
+        # 在file_scroll_area内且贴在conf_button1下面
+
         self.file_layout.addWidget(self.conf_button2, alignment=Qt.AlignCenter)
 
         self.conf_button3 = QPushButton("config1", self.file_widget)
         self.conf_button3.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
-        self.conf_button3.setFixedSize(350 , 60)
+        self.conf_button3.setFixedSize(350, 60)
+
         self.file_layout.addWidget(self.conf_button3, alignment=Qt.AlignCenter)
 
         self.file_layout.addStretch()
@@ -336,7 +399,7 @@ class MainWindow(QWidget):
         self.gen_conf_button.setStyleSheet('border-radius: 10px')
         self.logout_button.setStyleSheet('border-radius: 10px; color:#c75450;border:2px solid #c75450')
 
-        self.show_config()
+        # self.show_config()
         self.init_network()
         self.simple_show_graph()
         self.change_graph_html()
@@ -363,11 +426,12 @@ class MainWindow(QWidget):
         self.nt.from_nx(nx_graph)
 
     # 把配置文件以可点击的方式展示在左侧file栏
-    def show_config(self):
-        self.conf_button1 = QPushButton("config1", self.file_widget)
-        self.conf_button1.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
-        self.conf_button1.setFixedSize(300 , 60)
-        self.file_layout.addWidget(self.conf_button1, alignment=Qt.AlignLeft)
+    def conf_button_clicked(self):
+        self.bottom_line.setText(session.config_server[0])
+        self.bottom_line1.setText(session.config_server[1])
+        self.bottom_line2.setText(session.config_server[2])
+        self.bottom_line3.setText(session.config_server[3])
+        self.bottom_line4.setText(session.config_server[4])
 
     # 保存对图展示模式的修改
     def change_graph_html(self):
