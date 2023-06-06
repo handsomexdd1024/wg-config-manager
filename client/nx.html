@@ -6,6 +6,9 @@
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
             <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
             
+                <link href="lib/tom-select/tom-select.css" rel="stylesheet">
+                <script src="lib/tom-select/tom-select.complete.min.js"></script>
+            
         
 <center>
 <h1></h1>
@@ -52,6 +55,106 @@
     <body>
         <div class="card" style="width: 100%">
             
+                <div id="select-menu" class="card-header">
+                    <div class="row no-gutters">
+                        <div class="col-10 pb-2">
+                            <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="selectNode([value]);"
+                            id="select-node"
+                            placeholder="Select node..."
+                            >
+                                <option selected>Select a Node by ID</option>
+                                
+                                    <option value="Acciaiuoli">Acciaiuoli</option>
+                                
+                                    <option value="Medici">Medici</option>
+                                
+                                    <option value="Barbadori">Barbadori</option>
+                                
+                                    <option value="Ridolfi">Ridolfi</option>
+                                
+                                    <option value="Tornabuoni">Tornabuoni</option>
+                                
+                                    <option value="Albizzi">Albizzi</option>
+                                
+                                    <option value="Salviati">Salviati</option>
+                                
+                                    <option value="Castellani">Castellani</option>
+                                
+                                    <option value="Peruzzi">Peruzzi</option>
+                                
+                                    <option value="Strozzi">Strozzi</option>
+                                
+                                    <option value="Bischeri">Bischeri</option>
+                                
+                                    <option value="Guadagni">Guadagni</option>
+                                
+                                    <option value="Ginori">Ginori</option>
+                                
+                                    <option value="Pazzi">Pazzi</option>
+                                
+                                    <option value="Lamberteschi">Lamberteschi</option>
+                                
+                                    <option value="1">1</option>
+                                
+                                    <option value="2">2</option>
+                                
+                                    <option value="3">3</option>
+                                
+                                    <option value="4">4</option>
+                                
+                            </select>
+                        </div>
+                        <div class="col-2 pb-2">
+                            <button type="button" class="btn btn-primary btn-block" onclick="neighbourhoodHighlight({nodes: []});">Reset Selection</button>
+                        </div>
+                    </div>
+                </div>
+            
+            
+              <div id="filter-menu" class="card-header">
+                <div class="row no-gutters">
+                  <div class="col-3 pb-2">
+                    <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="updateFilter(value, 'item')"
+                            id="select-item"
+                        >
+                        <option value="">Select a network item</option>
+                        <option value="edge">edge</option>
+                        <option value="node">node</option>
+                    </select>
+                  </div>
+                  <div class="col-3 pb-2">
+                    <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            onchange="updateFilter(value, 'property')"
+                            id="select-property"
+                        >
+                        <option value="">Select a property...</option>
+                    </select>
+                  </div>
+                  <div class="col-3 pb-2">
+                    <select
+                            class="form-select"
+                            aria-label="Default select example"
+                            id="select-value"
+                        >
+                        <option value="">Select value(s)...</option>
+                    </select>
+                  </div>
+                  <div class="col-1 pb-2">
+                    <button type="button" class="btn btn-primary btn-block" onclick="highlightFilter(filter);">Filter</button>
+                  </div>
+                  <div class="col-2 pb-2">
+                    <button type="button" class="btn btn-primary btn-block" onclick="clearFilter(true)">Reset Selection</button>
+                  </div>
+                </div>
+              </div>
             
             <div id="mynetwork" class="card-body"></div>
         </div>
@@ -78,6 +181,140 @@
               };
 
               
+                  new TomSelect("#select-node",{
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      }
+                  });
+              
+
+              
+                  // explicitly using onItemAdd and this function as we need to save multiple values
+                  let updateValueFilter = function() {
+                      return function () {
+                      filter['value'].push(arguments[0])
+                      }
+                  }
+
+                  let valueControl = new TomSelect("#select-value",{
+                      maxItems: null,
+                      valueField: 'id',
+                      labelField: 'title',
+                      searchField: 'title',
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      },
+                      onItemAdd: updateValueFilter()
+                  });
+
+                  let addValues = function() {
+                      return function () {
+                          // clear the current value options and add the selected attribute values
+                          // tom-select handles duplicates
+                          let selectedProperty = arguments[0];
+                          valueControl.clear();
+                          valueControl.clearOptions();
+                          filter['value'] = []
+                          if (filter['item'] === 'node') {
+                              for (let each in allNodes) {
+                                  valueControl.addOption({
+                                      id:allNodes[each][selectedProperty],
+                                      title:allNodes[each][selectedProperty]
+                                  })
+                              }
+                          }
+                          else if (filter['item'] === 'edge') {
+                              for (let each in allEdges) {
+                                  valueControl.addOption({
+                                      id:allEdges[each][selectedProperty],
+                                      title:allEdges[each][selectedProperty]
+                                  })
+                              }
+                          }
+                      }
+                  };
+
+                  let propControl = new TomSelect("#select-property",{
+                      valueField: 'id',
+                      labelField: 'title',
+                      searchField: 'title',
+                      create: false,
+                      sortField: {
+                          field: "text",
+                          direction: "asc"
+                      },
+                      onItemAdd: addValues()
+                  });
+
+                  let addProperties = function() {
+                      return function () {
+                          // loops through the selected network item and adds the attributes to dropdown
+                          // tom-select handles duplicates
+                          clearFilter(false)
+                          if (arguments[0] === 'edge') {
+                              for (let each in allEdges) {
+                                  if (allEdges.hasOwnProperty(each)) {
+                                      for (let eachProp in allEdges[each]) {
+                                          if (allEdges[each].hasOwnProperty(eachProp)) {
+                                              propControl.addOption({id: eachProp, title: eachProp})
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                          else if (arguments[0] === 'node') {
+                              for (let each in allNodes) {
+                                  if (allNodes.hasOwnProperty(each)) {
+                                      for (let eachProp in allNodes[each]) {
+                                          if (allNodes[each].hasOwnProperty(eachProp)
+                                              && (eachProp !== 'hidden' && eachProp !== 'savedLabel'
+                                                  && eachProp !== 'hiddenLabel')) {
+                                              propControl.addOption({id: eachProp, title: eachProp})
+
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  };
+
+                  let itemControl = new TomSelect("#select-item",{
+                      create: false,
+                      sortField:{
+                          field: "text",
+                          direction: "asc"
+                      },
+                      onItemAdd: addProperties()
+                  });
+
+                  function clearFilter(reset) {
+                      // utility function to clear all the selected filter options
+                      // if reset is set to true, the existing filter will be removed
+                      // else, only the dropdown options are cleared
+                      propControl.clear();
+                      propControl.clearOptions();
+                      valueControl.clear();
+                      valueControl.clearOptions();
+                      filter = {
+                          item : '',
+                          property : '',
+                          value : []
+                      }
+                      if (reset) {
+                          itemControl.clear();
+                          filterHighlight({nodes: []})
+                      }
+                  }
+
+                  function updateFilter(value, key) {
+                      // key could be 'item' or 'property' and value is as selected in dropdown
+                      filter[key] = value
+                  }
 
               
 
@@ -88,8 +325,8 @@
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#97c2fc", "font": {"color": "white"}, "id": 0, "label": 0, "shape": "dot", "size": 10}, {"font": {"color": "white"}, "group": 1, "id": 1, "label": "Jayson", "shape": "dot", "size": 20, "title": "Jayson"}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 9, "label": 9, "shape": "dot", "size": 10}, {"font": {"color": "white"}, "group": 1, "id": 2, "label": "Billy", "shape": "dot", "size": 25, "title": "Billy"}, {"font": {"color": "white"}, "group": 1, "id": 3, "label": "Katherine", "shape": "dot", "size": 15, "title": "Katherine"}, {"font": {"color": "white"}, "group": 2, "id": 4, "label": "Lonely", "shape": "dot", "size": 10, "title": "Lonely"}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 5, "label": 5, "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 6, "label": 6, "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 7, "label": 7, "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 8, "label": 8, "shape": "dot", "size": 10}]);
-                  edges = new vis.DataSet([{"from": 0, "to": 1, "width": 1}, {"from": 0, "to": 9, "width": 1}, {"color": "red", "from": 1, "to": 2, "width": 0.5}, {"color": "green", "from": 1, "to": 3, "width": 0.5}, {"color": "blue", "from": 2, "to": 3, "width": 0.5}, {"from": 3, "to": 4, "width": 1}, {"from": 4, "to": 5, "width": 1}, {"from": 5, "to": 6, "width": 1}, {"from": 6, "to": 7, "width": 1}, {"from": 7, "to": 8, "width": 1}, {"from": 8, "to": 9, "width": 1}]);
+                  nodes = new vis.DataSet([{"color": "#97c2fc", "font": {"color": "white"}, "id": "Acciaiuoli", "label": "Acciaiuoli", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Medici", "label": "Medici", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Barbadori", "label": "Barbadori", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Ridolfi", "label": "Ridolfi", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Tornabuoni", "label": "Tornabuoni", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Albizzi", "label": "Albizzi", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Salviati", "label": "Salviati", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Castellani", "label": "Castellani", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Peruzzi", "label": "Peruzzi", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Strozzi", "label": "Strozzi", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Bischeri", "label": "Bischeri", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Guadagni", "label": "Guadagni", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Ginori", "label": "Ginori", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Pazzi", "label": "Pazzi", "shape": "dot", "size": 10}, {"color": "#97c2fc", "font": {"color": "white"}, "id": "Lamberteschi", "label": "Lamberteschi", "shape": "dot", "size": 10}, {"font": {"color": "white"}, "group": 1, "id": 1, "label": "Jayson", "shape": "dot", "size": 20, "title": "\u7f57\u632f\u58f0"}, {"font": {"color": "white"}, "group": 1, "id": 2, "label": "Billy", "shape": "dot", "size": 25, "title": "\u6768\u6fdb"}, {"font": {"color": "white"}, "group": 1, "id": 3, "label": "Katherine", "shape": "dot", "size": 15, "title": "\u80e1\u6b23\u626c"}, {"font": {"color": "white"}, "group": 2, "id": 4, "label": "Lonely", "shape": "dot", "size": 10, "title": "Lonely"}]);
+                  edges = new vis.DataSet([{"from": "Acciaiuoli", "to": "Medici", "width": 1}, {"from": "Medici", "to": "Barbadori", "width": 1}, {"from": "Medici", "to": "Ridolfi", "width": 1}, {"from": "Medici", "to": "Tornabuoni", "width": 1}, {"from": "Medici", "to": "Albizzi", "width": 1}, {"from": "Medici", "to": "Salviati", "width": 1}, {"from": "Castellani", "to": "Peruzzi", "width": 1}, {"from": "Castellani", "to": "Strozzi", "width": 1}, {"from": "Castellani", "to": "Barbadori", "width": 1}, {"from": "Peruzzi", "to": "Strozzi", "width": 1}, {"from": "Peruzzi", "to": "Bischeri", "width": 1}, {"from": "Strozzi", "to": "Ridolfi", "width": 1}, {"from": "Strozzi", "to": "Bischeri", "width": 1}, {"from": "Ridolfi", "to": "Tornabuoni", "width": 1}, {"from": "Tornabuoni", "to": "Guadagni", "width": 1}, {"from": "Albizzi", "to": "Ginori", "width": 1}, {"from": "Albizzi", "to": "Guadagni", "width": 1}, {"from": "Salviati", "to": "Pazzi", "width": 1}, {"from": "Bischeri", "to": "Guadagni", "width": 1}, {"from": "Guadagni", "to": "Lamberteschi", "width": 1}, {"color": "white", "from": 1, "to": 2, "width": 1.5}, {"color": "green", "from": 1, "to": 3, "width": 1.5}, {"color": "blue", "from": 2, "to": 3, "width": 1.5}]);
 
                   nodeColors = {};
                   allNodes = nodes.get({ returnType: "Object" });
@@ -139,6 +376,8 @@
 
                   
 
+                  
+                    network.on("selectNode", neighbourhoodHighlight);
                   
 
                   
