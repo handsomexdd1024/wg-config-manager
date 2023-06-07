@@ -261,7 +261,7 @@ def get_user_self(identifier):
         if row is not None:
             # todo: 对提取出的数据进行类型转换
             user_self = {
-                'identifier': row['identifier'],  # 比如这里的identifier是UUID类型，但是从数据库中提取出来不是UUID类型，需要转换
+                'identifier': convert_str_to_uuid(row['identifier']),  # 比如这里的identifier是UUID类型，但是从数据库中提取出来不是UUID类型，需要转换
                 'name': row['name'],  # 其余字段类似
                 'hashed_password': row['hashed_password'],
                 'salt': row['salt']
@@ -298,7 +298,7 @@ def get_wireguard_config(identifier):
 
         if row is not None:
             wireguard_config = {
-                'identifier': row['identifier'],
+                'identifier': convert_str_to_uuid(row['identifier']),
                 'owner': row['owner'],
                 'name': row['name'],
                 'address_list': row['address_list'],
@@ -333,7 +333,7 @@ def get_wireguard_connections(identifiers):
         wireguard_connections = []
         for row in rows:
             wireguard_connection = {
-                'identifier': row['identifier'],
+                'identifier': convert_str_to_uuid(row['identifier']),
                 'peers': row['peers'],
                 'preshared_key': row['preshared_key']
             }
@@ -366,7 +366,7 @@ def get_wireguard_networks(identifiers):
         wireguard_networks = []
         for row in rows:
             wireguard_network = {
-                'identifier': row['identifier'],
+                'identifier': convert_str_to_uuid(row['identifier']),
                 'name': row['name'],
                 'node_uuid_list': row['node_uuid_list'],
                 'connection_uuid_list': row['connection_uuid_list']
@@ -400,7 +400,7 @@ def get_wireguard_nodes(identifiers):
         wireguard_nodes = []
         for row in rows:
             wireguard_node = {
-                'identifier': row['identifier'],
+                'identifier': convert_str_to_uuid(row['identifier']),
                 'owner': row['owner'],
                 'name': row['name'],
                 'address_list': row['address_list'],
