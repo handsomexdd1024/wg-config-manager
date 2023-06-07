@@ -4,64 +4,81 @@ import uuid
 import pickle
 from enum import Enum
 
+
 # 枚举类型定义
 class NodeType(Enum):
     PEER = 0
     ROUTER = 1
     ROUTED = 2
 
+
 class EndpointType(Enum):
     IPV4 = 0
     IPV6 = 1
     DOMAIN = 2
 
+
 # NodeType和EndpointType转换函数
 def convert_node_type(node_type):
     return node_type.value
 
+
 def convert_endpoint_type(endpoint_type):
     return endpoint_type.value
+
 
 def convert_node_type_back(node_type_value):
     return NodeType(node_type_value)
 
+
 def convert_endpoint_type_back(endpoint_type_value):
     return EndpointType(endpoint_type_value)
+
 
 # UUID和字符串转换函数
 def convert_uuid_to_str(uuid_obj):
     return str(uuid_obj)
 
+
 def convert_str_to_uuid(uuid_str):
     return uuid.UUID(uuid_str)
+
 
 # 列表和字符串转换函数
 def convert_list_to_str(lst):
     return ','.join(lst)
 
+
 def convert_str_to_list(lst_str):
     return lst_str.split(',')
+
 
 # PEER（Python的序列化格式）和字符串之间的转换
 def convert_peer_to_str(peer):
     return pickle.dumps(peer)
 
+
 def convert_str_to_peer(peer_str):
     return pickle.loads(peer_str)
+
 
 # UUID和字符串之间的转换
 def convert_uuid_to_str(uuid_obj):
     return str(uuid_obj)
 
+
 def convert_str_to_uuid(uuid_str):
     return uuid.UUID(uuid_str)
+
 
 # 字节串（bytes）和字符串之间的转换
 def convert_bytes_to_str(bytes_obj):
     return bytes_obj.decode('utf-8')
 
+
 def convert_str_to_bytes(str_obj):
     return str_obj.encode('utf-8')
+
 
 # 注册类型转换函数
 psycopg2.extensions.register_adapter(NodeType, lambda x: x.value)
@@ -82,6 +99,7 @@ psycopg2.extensions.register_adapter(str, convert_str_to_uuid)
 psycopg2.extensions.register_adapter(str, convert_str_to_list)
 psycopg2.extras.register_uuid()
 
+
 # 连接到数据库
 def connect_to_database():
     try:
@@ -95,6 +113,7 @@ def connect_to_database():
         return conn
     except (Exception, psycopg2.Error) as error:
         print("连接到数据库时发生错误:", error)
+
 
 # 初始化数据库、创建表格和插入数据
 def initialize_database():
@@ -226,6 +245,7 @@ def initialize_database():
         if conn:
             conn.close()
 
+
 # 读取数据库并输出数据
 def get_user_self(identifier):
     conn = connect_to_database()
@@ -239,9 +259,10 @@ def get_user_self(identifier):
         row = cur.fetchone()
 
         if row is not None:
+            # todo: 对提取出的数据进行类型转换
             user_self = {
-                'identifier': row['identifier'],
-                'name': row['name'],
+                'identifier': row['identifier'],  # 比如这里的identifier是UUID类型，但是从数据库中提取出来不是UUID类型，需要转换
+                'name': row['name'],  # 其余字段类似
                 'hashed_password': row['hashed_password'],
                 'salt': row['salt']
             }
@@ -257,9 +278,11 @@ def get_user_self(identifier):
         if conn:
             conn.close()
 
+
 # 转换identifiers列表中的UUID为字符串类型
 def convert_uuid_list_to_str(identifiers):
     return [str(identifier) for identifier in identifiers]
+
 
 # 获取WireguardConfig对象
 def get_wireguard_config(identifier):
@@ -293,6 +316,7 @@ def get_wireguard_config(identifier):
         if conn:
             conn.close()
 
+
 # 获取WireguardConnection对象列表
 def get_wireguard_connections(identifiers):
     conn = connect_to_database()
@@ -324,6 +348,7 @@ def get_wireguard_connections(identifiers):
             cur.close()
         if conn:
             conn.close()
+
 
 # 获取WireguardNetwork对象列表
 def get_wireguard_networks(identifiers):
@@ -357,6 +382,7 @@ def get_wireguard_networks(identifiers):
             cur.close()
         if conn:
             conn.close()
+
 
 # 获取WireguardNode对象列表
 def get_wireguard_nodes(identifiers):
@@ -396,6 +422,7 @@ def get_wireguard_nodes(identifiers):
         if conn:
             conn.close()
 
+
 # 测试代码:
 def test_code():
     user_identifier = uuid.UUID('your_user_identifier')
@@ -430,6 +457,7 @@ def test_code():
     wireguard_nodes = get_wireguard_nodes(wireguard_node_identifiers)
     for node in wireguard_nodes:
         print(node)
+
 
 # 执行测试代码
 test_code()
