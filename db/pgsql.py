@@ -3,6 +3,8 @@ import psycopg2.extras
 import uuid
 import pickle
 from enum import Enum
+from core import *
+
 
 # 枚举类型定义
 class NodeType(Enum):
@@ -244,187 +246,184 @@ def initialize_database():
         if conn:
             conn.close()
 
+    # 读取数据库并输出数据
+    def get_user_self(identifier: uuid.UUID) -> user.User:
+        conn = connect_to_database()
+        if conn is None:
+            return None
 
-# 读取数据库并输出数据
-def read_from_database():
+        try:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        def get_user_self(identifier: str) -> User:
-            conn = connect_to_database()
-            if conn is None:
-                return None
+            cur.execute("SELECT * FROM user_self WHERE identifier = %s", (identifier,))
+            row = cur.fetchone()
 
-            try:
-                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            if row is not None:
+                user_self = User(
+                    identifier=row["identifier"],
+                    name=row["name"],
+                    hashed_password=row["hashed_password"],
+                    salt=row["salt"]
+                )
+                return user_self
 
-                cur.execute("SELECT * FROM user_self WHERE identifier = %s", (identifier,))
-                row = cur.fetchone()
+            return None
+        except (Exception, psycopg2.Error) as error:
+            print("Error while getting user_self:", error)
+            return None
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
 
-                if row is not None:
-                    user_self = User(
-                        identifier=row["identifier"],
-                        name=row["name"],
-                        hashed_password=row["hashed_password"],
-                        salt=row["salt"]
-                    )
-                    return user_self
+    def get_wireguard_config(identifier: uuid.UUID) -> wgconfig.WireguardConfig:
+        conn = connect_to_database()
+        if conn is None:
+            return None
 
-                return None
-            except (Exception, psycopg2.Error) as error:
-                print("Error while getting user_self:", error)
-                return None
-            finally:
-                if cur:
-                    cur.close()
-                if conn:
-                    conn.close()
+        try:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        def get_wireguard_config(identifier: str) -> WireguardConfig:
-            conn = connect_to_database()
-            if conn is None:
-                return None
+            cur.execute("SELECT * FROM WireguardConfig WHERE identifier = %s", (identifier,))
+            row = cur.fetchone()
+            wireguard_config = []
+            if row is not None:
+                wireguard_config = WireguardConfig(
+                    identifier=row["identifier"],
+                    owner=row["owner"],
+                    name=row["name"],
+                    address_list=row["address_list"],
+                    network_uuid=row["network_uuid"]
+                )
+                return wireguard_config
 
-            try:
-                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            return None
+        except (Exception, psycopg2.Error) as error:
+            print("Error while getting wireguard_config:", error)
+            return None
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
 
-                cur.execute("SELECT * FROM WireguardConfig WHERE identifier = %s", (identifier,))
-                row = cur.fetchone()
-                wireguard_config = []
-                if row is not None:
-                    wireguard_config = WireguardConfig(
-                        identifier=row["identifier"],
-                        owner=row["owner"],
-                        name=row["name"],
-                        address_list=row["address_list"],
-                        network_uuid=row["network_uuid"]
-                    )
-                    return wireguard_config
+    def get_wireguard_connection(identifiers: list[uuid.UUID]) -> list[wgobject.WireguardConnection]:
+        conn = connect_to_database()
+        if conn is None:
+            return None
 
-                return None
-            except (Exception, psycopg2.Error) as error:
-                print("Error while getting wireguard_config:", error)
-                return None
-            finally:
-                if cur:
-                    cur.close()
-                if conn:
-                    conn.close()
+        try:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        def get_wireguard_connection(identifiers: List[str]) -> List[WireguardConnection]:
-            conn = connect_to_database()
-            if conn is None:
-                return None
+            cur.execute("SELECT * FROM WireguardConnection WHERE identifier = ANY(%s)", (identifiers,))
+            rows = cur.fetchall()
 
-            try:
-                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            wireguard_connections = []
+            for row in rows:
+                wireguard_connection = WireguardConnection(
+                    identifier=row["identifier"],
+                    peers=row["peers"],
+                    preshared_key=row["preshared_key"]
+                )
+                wireguard_connections.append(wireguard_connection)
 
-                cur.execute("SELECT * FROM WireguardConnection WHERE identifier = ANY(%s)", (identifiers,))
-                rows = cur.fetchall()
+            return wireguard_connections
+        except (Exception, psycopg2.Error) as error:
+            print("Error while getting wireguard_connection:", error)
+            return None
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
 
-                wireguard_connections = []
-                for row in rows:
-                    wireguard_connection = WireguardConnection(
-                        identifier=row["identifier"],
-                        peers=row["peers"],
-                        preshared_key=row["preshared_key"]
-                    )
-                    wireguard_connections.append(wireguard_connection)
+    def get_wireguard_network(identifiers: list[uuid.UUID]) -> list[wgobject.WireguardNetwork]:
+        conn = connect_to_database()
+        if conn is None:
+            return None
 
-                return wireguard_connections
-            except (Exception, psycopg2.Error) as error:
-                print("Error while getting wireguard_connection:", error)
-                return None
-            finally:
-                if cur:
-                    cur.close()
-                if conn:
-                    conn.close()
+        try:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        def get_wireguard_network(identifiers: List[str]) -> List[WireguardNetwork]:
-            conn = connect_to_database()
-            if conn is None:
-                return None
+            cur.execute("SELECT * FROM WireguardNetwork WHERE identifier = ANY(%s)", (identifiers,))
+            rows = cur.fetchall()
 
-            try:
-                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            wireguard_networks = []
+            for row in rows:
+                wireguard_network = WireguardNetwork(
+                    identifier=row["identifier"],
+                    name=row["name"],
+                    node_uuid_list=row["node_uuid_list"],
+                    connection_uuid_list=row["connection_uuid_list"]
+                )
+                wireguard_networks.append(wireguard_network)
 
-                cur.execute("SELECT * FROM WireguardNetwork WHERE identifier = ANY(%s)", (identifiers,))
-                rows = cur.fetchall()
+            return wireguard_networks
+        except (Exception, psycopg2.Error) as error:
+            print("Error while getting wireguard_network:", error)
+            return None
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
 
-                wireguard_networks = []
-                for row in rows:
-                    wireguard_network = WireguardNetwork(
-                        identifier=row["identifier"],
-                        name=row["name"],
-                        node_uuid_list=row["node_uuid_list"],
-                        connection_uuid_list=row["connection_uuid_list"]
-                    )
-                    wireguard_networks.append(wireguard_network)
+    def get_wireguard_node(identifiers: list[uuid.UUID]) -> list[wgobject.WireguardNode]:
+        conn = connect_to_database()
+        if conn is None:
+            return None
 
-                return wireguard_networks
-            except (Exception, psycopg2.Error) as error:
-                print("Error while getting wireguard_network:", error)
-                return None
-            finally:
-                if cur:
-                    cur.close()
-                if conn:
-                    conn.close()
+        try:
+            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        def get_wireguard_node(identifiers: List[str]) -> List[WireguardNode]:
-            conn = connect_to_database()
-            if conn is None:
-                return None
+            cur.execute("SELECT * FROM WireguardNode WHERE identifier = ANY(%s)", (identifiers,))
+            rows = cur.fetchall()
 
-            try:
-                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+            wireguard_nodes = []
+            for row in rows:
+                wireguard_node = WireguardNode(
+                    identifier=row["identifier"],
+                    owner=row["owner"],
+                    name=row["name"],
+                    address_list=row["address_list"],
+                    admin_approval=row["admin_approval"],
+                    node_type=row["node_type"],
+                    private_key=row["private_key"],
+                    public_key=row["public_key"],
+                    endpoint=row["endpoint"]
+                )
+                wireguard_nodes.append(wireguard_node)
 
-                cur.execute("SELECT * FROM WireguardNode WHERE identifier = ANY(%s)", (identifiers,))
-                rows = cur.fetchall()
+            return wireguard_nodes
+        except (Exception, psycopg2.Error) as error:
+            print("Error while getting wireguard_node:", error)
+            return None
+        finally:
+            if cur:
+                cur.close()
+            if conn:
+                conn.close()
+            user_identifier = "your_user_identifier"
+            wireguard_config_identifier = "your_wireguard_config_identifier"
+            wireguard_connection_identifiers = ["connection_identifier_1", "connection_identifier_2"]
+            wireguard_network_identifiers = ["network_identifier_1", "network_identifier_2"]
+            wireguard_node_identifiers = ["node_identifier_1", "node_identifier_2"]
 
-                wireguard_nodes = []
-                for row in rows:
-                    wireguard_node = WireguardNode(
-                        identifier=row["identifier"],
-                        owner=row["owner"],
-                        name=row["name"],
-                        address_list=row["address_list"],
-                        admin_approval=row["admin_approval"],
-                        node_type=row["node_type"],
-                        private_key=row["private_key"],
-                        public_key=row["public_key"],
-                        endpoint=row["endpoint"]
-                    )
-                    wireguard_nodes.append(wireguard_node)
+            user_self = get_user_self(user_identifier)
+            print(user_self)
 
-                return wireguard_nodes
-            except (Exception, psycopg2.Error) as error:
-                print("Error while getting wireguard_node:", error)
-                return None
-            finally:
-                if cur:
-                    cur.close()
-                if conn:
-                    conn.close()
-                user_identifier = "your_user_identifier"
-                wireguard_config_identifier = "your_wireguard_config_identifier"
-                wireguard_connection_identifiers = ["connection_identifier_1", "connection_identifier_2"]
-                wireguard_network_identifiers = ["network_identifier_1", "network_identifier_2"]
-                wireguard_node_identifiers = ["node_identifier_1", "node_identifier_2"]
+            wireguard_config = get_wireguard_config(wireguard_config_identifier)
+            print(wireguard_config)
 
-                user_self = get_user_self(user_identifier)
-                print(user_self)
+            wireguard_connections = get_wireguard_connection(wireguard_connection_identifiers)
+            for connection in wireguard_connections:
+                print(connection)
 
-                wireguard_config = get_wireguard_config(wireguard_config_identifier)
-                print(wireguard_config)
+            wireguard_networks = get_wireguard_network(wireguard_network_identifiers)
+            for network in wireguard_networks:
+                print(network)
 
-                wireguard_connections = get_wireguard_connection(wireguard_connection_identifiers)
-                for connection in wireguard_connections:
-                    print(connection)
-
-                wireguard_networks = get_wireguard_network(wireguard_network_identifiers)
-                for network in wireguard_networks:
-                    print(network)
-
-                wireguard_nodes = get_wireguard_node(wireguard_node_identifiers)
-                for node in wireguard_nodes:
-                    print(node)
+            wireguard_nodes = get_wireguard_node(wireguard_node_identifiers)
+            for node in wireguard_nodes:
+                print(node)
