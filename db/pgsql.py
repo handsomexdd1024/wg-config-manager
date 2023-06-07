@@ -396,7 +396,7 @@ def get_wireguard_nodes(identifiers):
         if conn:
             conn.close()
 
-# 测试代码
+# 测试代码:
 def test_code():
     user_identifier = uuid.UUID('your_user_identifier')
     wireguard_config_identifier = uuid.UUID('your_wireguard_config_identifier')
