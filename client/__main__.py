@@ -153,10 +153,11 @@ class MainWindow(QWidget):
         self.text_combined_widget = None
         self.resize(1680, 1150)
         self.move(400, 250)
+
         # 设置窗口标题
         self.setWindowTitle('Fast WireGuard Network Manager')
         # 设置窗口图标
-        # TODO: 换上一个正经的icon
+
         # 整体使用水平布局
         self.main_layout = QHBoxLayout(self)
         # 创建一个主分割窗口分割左右两个部分
@@ -168,7 +169,7 @@ class MainWindow(QWidget):
         self.file_layout = QVBoxLayout(self.file_widget)
         self.file_widget.setStyleSheet('background-color: #3c3f41')
 
-        # 创建一个垂直布局用于容纳文件栏和滚动条
+        # 创建一个垂直布局用于容纳文件栏
         self.file_layout_with_scroll = QVBoxLayout(self.file_widget)
         self.file_layout_with_scroll.setContentsMargins(0, 0, 0, 0)
         self.file_layout_with_scroll.setSpacing(0)
@@ -545,7 +546,6 @@ class MainWindow(QWidget):
     def get_network_info(self):
         # TODO: 在此处编写获取该用户网络信息的代码
         session.list = session.config_server.get_network_object(session.user.uuid)
-
         pass
 
     def show_config(self):
@@ -644,7 +644,12 @@ class SignUpWindow(ChildDialogUi):
         username = self.sign_up_user_edit.text()
         cleartext_password = self.sign_up_passwd_edit.text()
         # TODO: 在此处编写注册账号的代码（发送usrname和cleartext_password到服务器）
-
+        signup_response = session.config_server.user_signup_request(username, cleartext_password)
+        if not signup_response[0]:
+            print(signup_response[1])
+            return
+        else:
+            print('You have signed up successfully! Now lets get started!')
 
 class ForgetPasswordWindow(ChildDialogUi):
     def __init__(self):
@@ -672,6 +677,9 @@ class ForgetPasswordWindow(ChildDialogUi):
 
     def passwd_recovery(self):
         username = self.user_edit.text()
+        # 退出登录
+        # session.config_server.user_logout_request(username)
+        # self.close()
 
 
 if __name__ == '__main__':
@@ -687,6 +695,7 @@ if __name__ == '__main__':
     apply_stylesheet(app, theme='dark_teal.xml', invert_secondary=True, extra=extra)
     window.show()
 
+    # app1代表登录窗口，app2代表主窗口，当登录窗口关闭时，交接控制权
     if app.exec_() == 0:
         app2 = QApplication(sys.argv)
         window2 = MainWindow()
