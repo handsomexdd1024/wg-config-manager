@@ -3,7 +3,6 @@ import psycopg2.extras
 import uuid
 import pickle
 from enum import Enum
-
 # 枚举类型定义
 class NodeType(Enum):
     PEER = 0
