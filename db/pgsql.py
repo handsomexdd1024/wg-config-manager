@@ -4,9 +4,6 @@ import uuid
 import pickle
 from enum import Enum
 
-from core import *
-
-
 # 枚举类型定义
 class NodeType(Enum):
     PEER = 0
@@ -99,7 +96,6 @@ psycopg2.extensions.register_adapter(int, convert_node_type_back)
 psycopg2.extensions.register_adapter(int, convert_endpoint_type_back)
 psycopg2.extensions.register_adapter(str, convert_str_to_uuid)
 psycopg2.extensions.register_adapter(str, convert_str_to_list)
-
 psycopg2.extras.register_uuid()
 
 
@@ -251,342 +247,184 @@ def initialize_database():
 
 # 读取数据库并输出数据
 def read_from_database():
-    conn = connect_to_database()
-    if conn is None:
-        return
-
-    try:
-        cur = conn.cursor()
-
-        # 查询数据示例
-        cur.execute("""
-            SELECT * FROM NodeType
-        """)
-        rows = cur.fetchall()
-        for row in rows:
-            print(row)
-    except (Exception, psycopg2.Error) as error:
-        print("Error while reading from database:", error)
-
-        # NodeType 表查询接口
-        def get_node_types():
-            conn = psycopg2.connect(
-                host="localhost",
-                port="7777",
-                database="postgres",
-                user="postgres",
-                password="hxy20030620"
-            )
-            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            cur.execute("SELECT * FROM NodeType")  # 执行查询语句
-            rows = cur.fetchall()
-
-            node_types = []
-            for row in rows:
-                node_type = {
-                    "id": row["id"],
-                    "name": row["name"]
-                }
-                node_types.append(node_type)
-
-            cur.close()
-            conn.close()
-
-            return node_types
-
-        # ObjectType 表查询接口
-        def get_object_types():
-            conn = psycopg2.connect(
-                host="localhost",
-                port="7777",
-                database="postgres",
-                user="postgres",
-                password="hxy20030620"
-            )
-            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            cur.execute("SELECT * FROM ObjectType")
-            rows = cur.fetchall()
-
-            object_types = []
-            for row in rows:
-                object_type = {
-                    "id": row["id"],
-                    "name": row["name"]
-                }
-                object_types.append(object_type)
-
-            cur.close()
-            conn.close()
-
-            return object_types
-
-        # EndpointType 表查询接口
-        def get_endpoint_types():
-            conn = psycopg2.connect(
-                host="localhost",
-                port="7777",
-                database="postgres",
-                user="postgres",
-                password="hxy20030620"
-            )
-            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            cur.execute("SELECT * FROM EndpointType")
-            rows = cur.fetchall()
-
-            endpoint_types = []
-            for row in rows:
-                endpoint_type = {
-                    "id": row["id"],
-                    "name": row["name"]
-                }
-                endpoint_types.append(endpoint_type)
-
-            cur.close()
-            conn.close()
-
-            return endpoint_types
-
-        # WireguardNode 表查询接口
-        def get_wireguard_nodes():
-            conn = psycopg2.connect(
-                host="localhost",
-                port="7777",
-                database="postgres",
-                user="postgres",
-                password="hxy20030620"
-            )
-            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            cur.execute("SELECT * FROM WireguardNode")
-            rows = cur.fetchall()
-
-            wireguard_nodes = []
-            for row in rows:
-                wireguard_node = {
-                    "identifier": row["identifier"],
-                    "owner": row["owner"],
-                    "name": row["name"],
-                    "oaddress_list": row["oaddress_list"],
-                    "admin_approval": row["admin_approval"],
-                    "node_type": row["node_type"],
-                    "private_key": row["private_key"],
-                    "public_key": row["public_key"],
-                    "endpoint": row["endpoint"]
-                }
-                wireguard_nodes.append(wireguard_node)
-
-            cur.close()
-            conn.close()
-
-            return wireguard_nodes
-
-        def get_wireguard_networks():
-            conn = psycopg2.connect(
-                host="localhost",
-                port="7777",
-                database="postgres",
-                user="postgres",
-                password="hxy20030620"
-            )
-            cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-
-            cur.execute("SELECT * FROM WireguardNetwork")
-            rows = cur.fetchall()
-
-            wireguard_networks = []
-            for row in rows:
-                wireguard_network = {
-                    "identifier": row["identifier"],
-                    "name": row["name"],
-                    "node_uuid_list": row["node_uuid_list"],
-                    "connection_uuid_list": row["connection_uuid_list"]
-                }
-                wireguard_networks.append(wireguard_network)
-
-            cur.close()
-            conn.close()
-
-            return wireguard_networks
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
-# 调用函数
-initialize_database()
-read_from_database()
-import psycopg2
-import psycopg2.extras
-import uuid
-import pickle
-from enum import Enum
-
-
-# 枚举类型定义
-class NodeType(Enum):
-    PEER = 0
-    ROUTER = 1
-    ROUTED = 2
-
-
-class EndpointType(Enum):
-    IPV4 = 0
-    IPV6 = 1
-    DOMAIN = 2
-
-
-# 数据库连接和类型转换函数的代码...
-
-# 获取 user_self 表的数据（返回一个 UUID）
-def get_user_self(identifier: uuid.UUID) -> user.User:
-    conn = connect_to_database()
-    if conn is None:
-        return None
-
-    try:
-        cur = conn.cursor()
-        cur.execute("SELECT identifier FROM user_self")
-        row = cur.fetchone()
-
-        if row is not None:
-            return row[0]  # 返回 UUID
-
-        return None
-
-    except (Exception, psycopg2.Error) as error:
-        print("Error while fetching user_self data:", error)
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
-# 获取 WireguardConfig 表的数据（返回一个列表）
-def get_wireguard_configs(identifiers: list[uuid.UUID]) -> list[wgconfig.WireguardConfig]:
-    conn = connect_to_database()
-    if conn is None:
-        return []
-
-    try:
-        cur = conn.cursor()
-        cur.execute("SELECT identifier FROM WireguardConfig")
-        rows = cur.fetchall()
-
-        wireguard_configs = [row[0] for row in rows]  # 返回 UUID 列表
-        return wireguard_configs
-
-    except (Exception, psycopg2.Error) as error:
-        print("Error while fetching WireguardConfig data:", error)
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
-# 获取 WireguardConnection 表的数据（返回一个列表）
-def get_wireguard_connections(identifiers: list[uuid.UUID]) -> list[wgobject.WireguardConnection]:
-    conn = connect_to_database()
-    if conn is None:
-        return []
-
-    try:
-        cur = conn.cursor()
-        cur.execute("SELECT identifier FROM WireguardConnection")
-        rows = cur.fetchall()
-
-        wireguard_connections = [row[0] for row in rows]  # 返回 UUID 列表
-        return wireguard_connections
-
-    except (Exception, psycopg2.Error) as error:
-        print("Error while fetching WireguardConnection data:", error)
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
-# 获取 WireguardNetwork 表的数据（返回一个列表）
-def get_wireguard_networks(identifiers: list[uuid.UUID]) -> list[wgobject.WireguardNetwork]:
-    conn = connect_to_database()
-    if conn is None:
-        return []
-
-    try:
-        cur = conn.cursor()
-        cur.execute("SELECT identifier FROM WireguardNetwork")
-        rows = cur.fetchall()
-
-        wireguard_networks = [row[0] for row in rows]  # 返回 UUID 列表
-        return wireguard_networks
-
-    except (Exception, psycopg2.Error) as error:
-        print("Error while fetching WireguardNetwork data:", error)
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
-# 获取 WireguardNode 表的数据（返回一个列表）
-def get_wireguard_nodes(identifiers: list[uuid.UUID]) -> list[wgobject.WireguardNode]:
-    conn = connect_to_database()
-    if conn is None:
-        return []
-
-    try:
-        cur = conn.cursor()
-        cur.execute("SELECT identifier FROM WireguardNode")
-        rows = cur.fetchall()
-
-        wireguard_nodes = [row[0] for row in rows]  # 返回 UUID 列表
-        return wireguard_nodes
-
-    except (Exception, psycopg2.Error) as error:
-        print("Error while fetching WireguardNode data:", error)
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-
-# 连接到数据库和初始化的代码...
-
-# 调用函数进行数据查询
-user_self = get_user_self()
-print("User Self:")
-print(user_self)
-
-wireguard_configs = get_wireguard_configs()
-print("Wireguard Configs:")
-for wireguard_config in wireguard_configs:
-    print(wireguard_config)
-
-wireguard_connections = get_wireguard_connections()
-print("Wireguard Connections:")
-for wireguard_connection in wireguard_connections:
-    print(wireguard_connection)
-
-wireguard_networks = get_wireguard_networks()
-print("Wireguard Networks:")
-for wireguard_network in wireguard_networks:
-    print(wireguard_network)
-
-wireguard_nodes = get_wireguard_nodes()
-print("Wireguard Nodes:")
-for wireguard_node in wireguard_nodes:
-    print(wireguard_node)
+
+        def get_user_self(identifier: str) -> User:
+            conn = connect_to_database()
+            if conn is None:
+                return None
+
+            try:
+                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+                cur.execute("SELECT * FROM user_self WHERE identifier = %s", (identifier,))
+                row = cur.fetchone()
+
+                if row is not None:
+                    user_self = User(
+                        identifier=row["identifier"],
+                        name=row["name"],
+                        hashed_password=row["hashed_password"],
+                        salt=row["salt"]
+                    )
+                    return user_self
+
+                return None
+            except (Exception, psycopg2.Error) as error:
+                print("Error while getting user_self:", error)
+                return None
+            finally:
+                if cur:
+                    cur.close()
+                if conn:
+                    conn.close()
+
+        def get_wireguard_config(identifier: str) -> WireguardConfig:
+            conn = connect_to_database()
+            if conn is None:
+                return None
+
+            try:
+                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+                cur.execute("SELECT * FROM WireguardConfig WHERE identifier = %s", (identifier,))
+                row = cur.fetchone()
+                wireguard_config = []
+                if row is not None:
+                    wireguard_config = WireguardConfig(
+                        identifier=row["identifier"],
+                        owner=row["owner"],
+                        name=row["name"],
+                        address_list=row["address_list"],
+                        network_uuid=row["network_uuid"]
+                    )
+                    return wireguard_config
+
+                return None
+            except (Exception, psycopg2.Error) as error:
+                print("Error while getting wireguard_config:", error)
+                return None
+            finally:
+                if cur:
+                    cur.close()
+                if conn:
+                    conn.close()
+
+        def get_wireguard_connection(identifiers: List[str]) -> List[WireguardConnection]:
+            conn = connect_to_database()
+            if conn is None:
+                return None
+
+            try:
+                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+                cur.execute("SELECT * FROM WireguardConnection WHERE identifier = ANY(%s)", (identifiers,))
+                rows = cur.fetchall()
+
+                wireguard_connections = []
+                for row in rows:
+                    wireguard_connection = WireguardConnection(
+                        identifier=row["identifier"],
+                        peers=row["peers"],
+                        preshared_key=row["preshared_key"]
+                    )
+                    wireguard_connections.append(wireguard_connection)
+
+                return wireguard_connections
+            except (Exception, psycopg2.Error) as error:
+                print("Error while getting wireguard_connection:", error)
+                return None
+            finally:
+                if cur:
+                    cur.close()
+                if conn:
+                    conn.close()
+
+        def get_wireguard_network(identifiers: List[str]) -> List[WireguardNetwork]:
+            conn = connect_to_database()
+            if conn is None:
+                return None
+
+            try:
+                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+                cur.execute("SELECT * FROM WireguardNetwork WHERE identifier = ANY(%s)", (identifiers,))
+                rows = cur.fetchall()
+
+                wireguard_networks = []
+                for row in rows:
+                    wireguard_network = WireguardNetwork(
+                        identifier=row["identifier"],
+                        name=row["name"],
+                        node_uuid_list=row["node_uuid_list"],
+                        connection_uuid_list=row["connection_uuid_list"]
+                    )
+                    wireguard_networks.append(wireguard_network)
+
+                return wireguard_networks
+            except (Exception, psycopg2.Error) as error:
+                print("Error while getting wireguard_network:", error)
+                return None
+            finally:
+                if cur:
+                    cur.close()
+                if conn:
+                    conn.close()
+
+        def get_wireguard_node(identifiers: List[str]) -> List[WireguardNode]:
+            conn = connect_to_database()
+            if conn is None:
+                return None
+
+            try:
+                cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+                cur.execute("SELECT * FROM WireguardNode WHERE identifier = ANY(%s)", (identifiers,))
+                rows = cur.fetchall()
+
+                wireguard_nodes = []
+                for row in rows:
+                    wireguard_node = WireguardNode(
+                        identifier=row["identifier"],
+                        owner=row["owner"],
+                        name=row["name"],
+                        address_list=row["address_list"],
+                        admin_approval=row["admin_approval"],
+                        node_type=row["node_type"],
+                        private_key=row["private_key"],
+                        public_key=row["public_key"],
+                        endpoint=row["endpoint"]
+                    )
+                    wireguard_nodes.append(wireguard_node)
+
+                return wireguard_nodes
+            except (Exception, psycopg2.Error) as error:
+                print("Error while getting wireguard_node:", error)
+                return None
+            finally:
+                if cur:
+                    cur.close()
+                if conn:
+                    conn.close()
+                user_identifier = "your_user_identifier"
+                wireguard_config_identifier = "your_wireguard_config_identifier"
+                wireguard_connection_identifiers = ["connection_identifier_1", "connection_identifier_2"]
+                wireguard_network_identifiers = ["network_identifier_1", "network_identifier_2"]
+                wireguard_node_identifiers = ["node_identifier_1", "node_identifier_2"]
+
+                user_self = get_user_self(user_identifier)
+                print(user_self)
+
+                wireguard_config = get_wireguard_config(wireguard_config_identifier)
+                print(wireguard_config)
+
+                wireguard_connections = get_wireguard_connection(wireguard_connection_identifiers)
+                for connection in wireguard_connections:
+                    print(connection)
+
+                wireguard_networks = get_wireguard_network(wireguard_network_identifiers)
+                for network in wireguard_networks:
+                    print(network)
+
+                wireguard_nodes = get_wireguard_node(wireguard_node_identifiers)
+                for node in wireguard_nodes:
+                    print(node)
