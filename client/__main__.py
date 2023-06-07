@@ -8,6 +8,8 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView
 from qt_material import apply_stylesheet
 from pyvis.network import Network
 import client.network as network
+import core.wgconfig as config
+import core.wgobject as wgobject
 import core.user as user
 import networkx as nx
 
@@ -15,13 +17,17 @@ import networkx as nx
 class Session:
     def __init__(self):
         self.user = None
-        self.config_server = ['2021', 'Jayson', '2021', 'userlist', '2021']
+        self.config_server = network.ConfigServer('localhost:8000')
+        self.wireguard_object = None
 
     def get_user_config(self):
         self.config_server.get_config(self.user.uuid)
 
-    def init_config_server(self):
-        self.config_server = network.ConfigServer()
+    def init_config_server(self, url):
+        self.config_server = network.ConfigServer(url)
+
+    def get_wg_object(self):
+        self.wireguard_object = self.config_server.get_network_object(self.user.uuid, self.user.wg_object_uuid_list)
 
 
 session = Session()
@@ -141,6 +147,7 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
         # 窗口居中占满半个屏幕
+        self.setWindowIcon(QIcon('../resource/bupt1.png'))
         self.conf_line = None
         self.conf_text = None
         self.text_combined_widget = None
@@ -220,11 +227,11 @@ class MainWindow(QWidget):
         self.bottom_text2 = QLabel(self.bottom_conf_widget2)
         self.bottom_text3 = QLabel(self.bottom_conf_widget3)
         self.bottom_text4 = QLabel(self.bottom_conf_widget4)
-        self.bottom_text.setText('UID  : ')
-        self.bottom_text1.setText('Name : ')
-        self.bottom_text2.setText('Owner :')
-        self.bottom_text3.setText('Users :')
-        self.bottom_text4.setText('NID  : ')
+        self.bottom_text.setText('UID  :   ')
+        self.bottom_text1.setText('Name :')
+        self.bottom_text2.setText('Owner:')
+        self.bottom_text3.setText('Users:  ')
+        self.bottom_text4.setText('NID  :   ')
 
         self.bottom_line = QLineEdit(self.bottom_conf_widget)
         self.bottom_line1 = QLineEdit(self.bottom_conf_widget1)
@@ -250,8 +257,6 @@ class MainWindow(QWidget):
         self.bottom_text_layout.addWidget(self.bottom_conf_widget4, alignment=Qt.AlignLeft)
 
         # 设置底部edit_line区域样式
-        self.bottom_line.setStyleSheet(
-            'background-color: #222222; color: white; font-size: 20px; font-family: "Microsoft YaHei"；width: 500px')
         self.bottom_line1.setStyleSheet(
             'background-color: #222222; color: white; font-size: 20px; font-family: "Microsoft YaHei"; width: 1100px')
         self.bottom_line2.setStyleSheet(
@@ -276,24 +281,23 @@ class MainWindow(QWidget):
         self.right_splitter.setHandleWidth(5)
 
         # 创建file区底部按钮,用于新建配置文件
-        self.conf_button1 = QPushButton("config1", self.file_widget)
+        self.conf_button1 = QPushButton("config file1", self.file_widget)
         self.conf_button1.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
         self.conf_button1.setFixedSize(350, 60)
         self.file_layout.addWidget(self.conf_button1, alignment=Qt.AlignCenter)
-        self.conf_button1.clicked.connect(self.conf_button_clicked)
+        self.conf_button1.clicked.connect(self.conf1_button_clicked)
 
-        self.conf_button2 = QPushButton("config2", self.file_widget)
+        self.conf_button2 = QPushButton("config file2", self.file_widget)
         self.conf_button2.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
         self.conf_button2.setFixedSize(350, 60)
-        # 在file_scroll_area内且贴在conf_button1下面
-
         self.file_layout.addWidget(self.conf_button2, alignment=Qt.AlignCenter)
+        self.conf_button2.clicked.connect(self.conf2_button_clicked)
 
-        self.conf_button3 = QPushButton("config1", self.file_widget)
+        self.conf_button3 = QPushButton("config file3", self.file_widget)
         self.conf_button3.setStyleSheet('color: white; font-size: 20px; font-family: "Microsoft YaHei"')
         self.conf_button3.setFixedSize(350, 60)
-
         self.file_layout.addWidget(self.conf_button3, alignment=Qt.AlignCenter)
+        self.conf_button3.clicked.connect(self.conf3_button_clicked)
 
         self.file_layout.addStretch()
 
@@ -408,13 +412,13 @@ class MainWindow(QWidget):
     def init_network(self):
         # 创建一个network
         self.nt = Network(height="1160px", width="100%", bgcolor="#222222", font_color="white", filter_menu=False)
-        nx_graph = nx.cycle_graph(10)
-        nx_graph.add_node(1, size=20, label='Jayson', title='Jayson', group=1)
-        nx_graph.add_node(2, size=25, label='Billy', title='Billy', group=1)
-        nx_graph.add_node(3, size=15, label='Katherine', title='Katherine', group=1)
-        nx_graph.add_edge(1, 2, weight=0.5, color='red')
-        nx_graph.add_edge(1, 3, weight=0.5, color='green')
-        nx_graph.add_edge(2, 3, weight=0.5, color='blue')
+        nx_graph = nx.florentine_families_graph()
+        nx_graph.add_node(1, size=20, label='Jayson', title='罗振声', group=1)
+        nx_graph.add_node(2, size=25, label='Billy', title='杨濛', group=1)
+        nx_graph.add_node(3, size=15, label='Katherine', title='胡欣扬', group=1)
+        nx_graph.add_edge(1, 2, weight=1.5, color='white')
+        nx_graph.add_edge(1, 3, weight=1.5, color='green')
+        nx_graph.add_edge(2, 3, weight=1.5, color='blue')
         nx_graph.add_node(4, size=10, label='Lonely', title='Lonely', group=2)
 
         '''此处使用networkx，An easy way to visualize and construct pyvis networks is to use Networkx and use pyvis’s 
@@ -426,12 +430,26 @@ class MainWindow(QWidget):
         self.nt.from_nx(nx_graph)
 
     # 把配置文件以可点击的方式展示在左侧file栏
-    def conf_button_clicked(self):
-        self.bottom_line.setText(session.config_server[0])
-        self.bottom_line1.setText(session.config_server[1])
-        self.bottom_line2.setText(session.config_server[2])
-        self.bottom_line3.setText(session.config_server[3])
-        self.bottom_line4.setText(session.config_server[4])
+    def conf1_button_clicked(self):
+        self.bottom_line.setText("2021210414")
+        self.bottom_line1.setText("Config file 1")
+        self.bottom_line2.setText("JaysonLuo")
+        self.bottom_line3.setText("JaysonLuo, BillyYang, KatherineHu")
+        self.bottom_line4.setText("eaf032g231nh")
+
+    def conf2_button_clicked(self):
+        self.bottom_line.setText("2021211329")
+        self.bottom_line1.setText("Config file 2")
+        self.bottom_line2.setText("BillyYang")
+        self.bottom_line3.setText("JaysonLuo, BillyYang, KatherineHu, KayleeWang")
+        self.bottom_line4.setText("ure864g458hf")
+
+    def conf3_button_clicked(self):
+        self.bottom_line.setText("2021211837")
+        self.bottom_line1.setText("Config file 3")
+        self.bottom_line2.setText("KatherineHu")
+        self.bottom_line3.setText("JaysonLuo, BillyYang, KatherineHu, KayleeWang, Lonely")
+        self.bottom_line4.setText("jgk984gjgk4")
 
     # 保存对图展示模式的修改
     def change_graph_html(self):
@@ -526,6 +544,8 @@ class MainWindow(QWidget):
 
     def get_network_info(self):
         # TODO: 在此处编写获取该用户网络信息的代码
+        session.list = session.config_server.get_network_object(session.user.uuid)
+
         pass
 
     def show_config(self):
@@ -567,6 +587,7 @@ class MainWindow(QWidget):
     def logout(self):
         # TODO: 在此处编写登出的代码
         # logout_response = config_server.user_logout_request(session.user.uuid)
+        username = session.user
         pass
 
 
