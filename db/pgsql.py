@@ -123,104 +123,198 @@ def initialize_database():
 
     try:
         cur = conn.cursor()
+        #创建必要的schema和schema下对应的表
+        # 创建 schema WireguardNode
+        cur.execute("""
+                    CREATE SCHEMA IF NOT EXISTS wireguard
+                """)
 
+        # 创建 table NodeType
         cur.execute("""
-                    CREATE TABLE IF NOT EXISTS NodeType (
+                    CREATE TABLE IF NOT EXISTS wireguard.NodeType (
                         id SERIAL PRIMARY KEY,
-                        name VARCHAR(50) NOT NULL
-                    )
-                """)
-        cur.execute("""
-                    CREATE TABLE IF NOT EXISTS ObjectType (
-                        id SERIAL PRIMARY KEY,
-                        name VARCHAR(50) NOT NULL
-                    )
-                """)
-        cur.execute("""
-                    CREATE TABLE IF NOT EXISTS EndpointType (
-                        id SERIAL PRIMARY KEY,
-                        name VARCHAR(50) NOT NULL
+                        name VARCHAR(255)
                     )
                 """)
 
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS WireguardNode ("
-            "identifier UUID PRIMARY KEY, "
-            "owner UUID NOT NULL, "
-            "name VARCHAR(50), "
-            "address_list VARCHAR, "
-            "admin_approval BOOLEAN, "
-            "node_type INTEGER REFERENCES NodeType(id), "
-            "private_key VARCHAR, "
-            "public_key VARCHAR, "
-            "endpoint INTEGER REFERENCES EndpointType(id)"
-            ")"
-        )
+        # 创建 table EndpointType
+        cur.execute("""
+                    CREATE TABLE IF NOT EXISTS wireguard.EndpointType (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(255)
+                    )
+                """)
 
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS WireguardObject ("
-            "identifier UUID PRIMARY KEY, "
-            "object_type INTEGER REFERENCES ObjectType(id)"
-            ")"
-        )
+        # 创建 table self
+        cur.execute("""
+                    CREATE TABLE IF NOT EXISTS wireguard.self (
+                        identifier UUID PRIMARY KEY,
+                        owner UUID,
+                        name VARCHAR(255),
+                        address_list JSONB,
+                        admin_approval BOOLEAN,
+                        node_type VARCHAR(255),
+                        private_key TEXT,
+                        public_key TEXT,
+                        endpoint TEXT
+                    )
+                """)
 
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS WireguardConnection ("
-            "identifier UUID PRIMARY KEY, "
-            "peers VARCHAR, "
-            "preshared_key VARCHAR"
-            ")"
-        )
+        # 创建 schema WireguardObject
+        cur.execute("""
+                    CREATE SCHEMA IF NOT EXISTS wireguardobject
+                """)
 
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS WireguardNetwork ("
-            "identifier UUID PRIMARY KEY, "
-            "name VARCHAR(50), "
-            "node_uuid_list VARCHAR, "
-            "connection_uuid_list VARCHAR"
-            ")"
-        )
+        # 创建 table ObjectType
+        cur.execute("""
+                    CREATE TABLE IF NOT EXISTS wireguardobject.ObjectType (
+                        id SERIAL PRIMARY KEY,
+                        name VARCHAR(255)
+                    )
+                """)
 
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS user_self ("
-            "identifier UUID PRIMARY KEY, "
-            "name VARCHAR(50), "
-            "hashed_password VARCHAR, "
-            "salt VARCHAR"
-            ")"
-        )
+        # 创建 table self
+        cur.execute("""
+                    CREATE TABLE IF NOT EXISTS wireguardobject.self (
+                        identifier UUID PRIMARY KEY,
+                        object_type INTEGER
+                    )
+                """)
 
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS WireguardConfig ("
-            "identifier UUID PRIMARY KEY, "
-            "owner UUID, "
-            "name VARCHAR(50), "
-            "address_list VARCHAR, "
-            "network_uuid UUID REFERENCES WireguardNetwork(identifier)"
-            ")"
-        )
+        # 创建 schema WireguardConnection
+        cur.execute("""
+                    CREATE SCHEMA IF NOT EXISTS wireguardconnection
+                """)
 
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS StandardResponse ("
-            "code INTEGER, "
-            "message VARCHAR, "
-            "content VARCHAR"
-            ")"
-        )
+        # 创建 table self
+        cur.execute("""
+                    CREATE TABLE IF NOT EXISTS wireguardconnection.self (
+                        identifier TEXT PRIMARY KEY,
+                        peers TEXT,
+                        preshared_key TEXT
+                    )
+                """)
 
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS NetworkModification_Action ("
-            "id SERIAL PRIMARY KEY, "
-            "name VARCHAR(50) NOT NULL"
-            ")"
-        )
+        # 创建 schema WireguardNetwork
+        cur.execute("""
+                    CREATE SCHEMA IF NOT EXISTS wireguardnetwork
+                """)
 
-        cur.execute(
-            "CREATE TABLE IF NOT EXISTS NetworkModification ("
-            "action INTEGER REFERENCES NetworkModification_Action(id), "
-            "content VARCHAR"
-            ")"
-        )
+        # 创建 table self
+        cur.execute("""
+                    CREATE TABLE IF NOT EXISTS wireguardnetwork.self (
+                        identifier TEXT PRIMARY KEY,
+                        name VARCHAR(255),
+                        node_uuid_list TEXT,
+                        connection_uuid_list TEXT
+                    )
+                """)
+        # 在public schema中创建12个表，包含全部范围
+        cur.execute("""
+            CREATE TABLE NodeType (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) NOT NULL
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE EndpointType (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) NOT NULL
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE ObjectType (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) NOT NULL
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE WireguardNode (
+                identifier UUID PRIMARY KEY,
+                owner UUID NOT NULL,
+                name VARCHAR(50),
+                oaddress_list VARCHAR,
+                admin_approval BOOLEAN,
+                node_type INTEGER REFERENCES NodeType(id),
+                private_key VARCHAR,
+                public_key VARCHAR,
+                endpoint INTEGER REFERENCES EndpointType(id)
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE WireguardObject (
+                identifier UUID PRIMARY KEY,
+                object_type INTEGER REFERENCES ObjectType(id)
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE WireguardConnection (
+                identifier UUID PRIMARY KEY,
+                opeers VARCHAR,
+                preshared_key VARCHAR
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE WireguardNetwork (
+                identifier UUID PRIMARY KEY,
+                name VARCHAR(50),
+                node_uuid_list VARCHAR,
+                connection_uuid_list VARCHAR
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE user_self (
+                identifier UUID PRIMARY KEY,
+                name VARCHAR(50),
+                hashed_password VARCHAR,
+                salt VARCHAR
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE WireguardConfig (
+                identifier UUID PRIMARY KEY,
+                owner UUID,
+                name VARCHAR(50),
+                address_list VARCHAR,
+                network_uuid UUID REFERENCES WireguardNetwork(identifier)
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE StandardResponse (
+                code INTEGER,
+                message VARCHAR,
+                content VARCHAR
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE NetworkModification_Action (
+                id SERIAL PRIMARY KEY,
+                name VARCHAR(50) NOT NULL
+            )
+        """)
+
+        cur.execute("""
+            CREATE TABLE NetworkModification (
+                action INTEGER REFERENCES NetworkModification_Action(id),
+                content VARCHAR
+            )
+        """)
+        # 提交事务
+        conn.commit()
+
+        print("Schema and tables created successfully!")
+    except (Exception, psycopg2.Error) as error:
+        print("Error creating schema and tables:", error)
 
         # 插入数据示例
         cur.execute(
@@ -459,5 +553,5 @@ def test_code():
         print(node)
 
 
-# 执行测试代码
-test_code()
+# 执行测试代码:将对应的uuid.UUID替换后，去掉下一行的注释可以进行替换
+#test_code()
